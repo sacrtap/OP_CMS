@@ -20,11 +20,14 @@ from sqlalchemy import or_, asc, desc
 import logging
 import uuid
 from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
 
 from backend.models.database_models import (
     Customer, CustomerCreate, CustomerUpdate, CustomerResponse, CustomerListResponse
 )
 from backend.dao.database_dao import DatabaseSessionFactory
+from backend.services.excel_import_service import CustomerExcelService, ExcelImportError
 
 logger = logging.getLogger(__name__)
 
