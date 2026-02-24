@@ -13,9 +13,11 @@ Development:
 
 from sanic import Sanic
 from sanic_cors import CORS
+from sanic_ext import Extend
 import logging
 
 from backend.api.customers import customer_bp
+from backend.api.auth import auth_bp
 
 # Configure logging
 logging.basicConfig(
