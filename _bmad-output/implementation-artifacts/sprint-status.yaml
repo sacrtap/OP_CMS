@@ -1,0 +1,94 @@
+# generated: 2026-02-24T09:25:54.447Z
+# project: OP_CMS
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - review-pending-changes: Code review found issues requiring fixes
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-02-24T09:25:54.447Z
+project: OP_CMS
+project_key: NOKEY
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  epic-0: in-progress
+  0-1-项目初始化：done
+  0-2-数据库设计完成：done
+  0-3-外部-api 对接：done
+  0-4-部署架构方案：done
+  epic-0-retrospective: optional
+
+  epic-1: backlog
+  1-1-客户基础信息维护: backlog
+  1-2-客户信息查询与搜索: backlog
+  1-3-客户信息编辑与删除: backlog
+  1-4-客户数据excel批量导入: backlog
+  1-5-客户信息查看权限: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-单层定价模式配置: backlog
+  2-2-多层定价模式配置: backlog
+  2-3-阶梯定价模式配置: backlog
+  2-4-价格配置版本控制: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-自动化账单生成: backlog
+  3-2-手工录入特殊场景结算结果: backlog
+  3-3-账单校验与发送: backlog
+  3-4-收款核销功能: backlog
+  3-5-逾期提醒功能: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-管理驾驶舱实时数据看板: backlog
+  4-2-客户分层和风险预警: backlog
+  4-3-客户用量趋势分析: backlog
+  4-4-多维度报表导出: backlog
+  4-5-报表订阅功能: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-用户账户管理: backlog
+  5-2-角色分配与权限控制: backlog
+  5-3-操作审计日志: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-数据质量验证与重复检测: backlog
+  6-3-数据导出功能: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  6-1-系统参数配置: backlog
+  6-2-系统运行状态监控: backlog
+  6-3-数据备份与恢复: backlog
+  6-4-移动端访问支持: backlog
+  epic-7-retrospective: optional

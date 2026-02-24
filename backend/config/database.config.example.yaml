@@ -1,0 +1,30 @@
+# MySQL Database Configuration
+# OP_CMS Backend - MySQL 8.0+ Connection Settings
+
+# Database connection details
+DB_HOST: ${DB_HOST:-localhost}
+DB_PORT: ${DB_PORT:-3306}
+DB_NAME: ${DB_NAME:-op_cms}
+DB_USER: ${DB_USER:-root}
+DB_PASSWORD: ${DB_PASSWORD:-}  # NO DEFAULT PASSWORD - MUST BE SET
+
+# Connection pool settings
+POOL_SIZE: ${POOL_SIZE:-5}
+POOL_TIMEOUT: ${POOL_TIMEOUT:-30}
+POOL_IDLE_TIMEOUT: ${POOL_IDLE_TIMEOUT:-60000}
+
+# Character set and collation
+CHARSET: ${CHARSET:-utf8mb4}
+COLLATION: ${COLLATION:-utf8mb4_unicode_ci}
+
+# Auto-reconnection settings
+AUTO_RECONNECT: ${AUTO_RECONNECT:-true}
+RECONNECT_INTERVAL: ${RECONNECT_INTERVAL:-5000}
+
+# SSL Configuration (optional)
+# SSL_CA: ${SSL_CA:-}
+# SSL_CERT: ${SSL_CERT:-}
+# SSL_KEY: ${SSL_KEY:-}
+
+# SQL Mode
+SQL_MODE: ${SQL_MODE:-STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION}
