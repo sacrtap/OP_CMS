@@ -19,6 +19,7 @@ import logging
 from backend.api.customers import customer_bp
 from backend.api.auth import auth_bp
 from backend.api.pricing import pricing_bp
+from backend.api.settlements import settlement_bp
 
 # Configure logging
 logging.basicConfig(
@@ -79,6 +80,7 @@ CORS(app)
 app.blueprint(customer_bp, url_prefix="/api/v1")
 app.blueprint(auth_bp, url_prefix="/api/v1")
 app.blueprint(pricing_bp, url_prefix="/api/v1")
+app.blueprint(settlement_bp, url_prefix="/api/v1")
 
 # Health check endpoint
 @app.route('/health', methods=['GET'])
