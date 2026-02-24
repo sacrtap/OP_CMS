@@ -1,49 +1,19 @@
 """
-OP_CMS Backend Test Configuration
-Pytest fixtures and configuration
+OP_CMS Backend Test Configuration - Simplified
+For unit tests without database dependencies
 """
 
 import pytest
-from decimal import Decimal
-from datetime import datetime
-from typing import Generator
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+import sys
+import os
 
-from backend.models.database_models import Base
+# Add backend directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 
-# ==================== Pytest Fixtures ====================
-
+# Simple fixture for mock session
 @pytest.fixture
-def test_db_url() -> str:
-    """Test database connection URL"""
-    return "mysql+pymysql://root:@localhost:3306/op_cms_test"
-
-
-@pytest.fixture
-def engine(test_db_url: str):
-    """Create test database engine"""
-    return create_engine(test_db_url, pool_pre_ping=True)
-
-
-@pytest.fixture
-def session(engine) -> Generator[Session, None, None]:
-    """Create database session for tests"""
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(bind=engine)
-    session = SessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
-
-
-@pytest.fixture
-def db_session(session) -> Generator[Session, None, None]:
-    """Database session with cleanup for integration tests"""
-    try:
-        yield session
-        session.rollback()
-    finally:
-        session.close()
+def mock_session():
+    """Mock database session for unit tests"""
+    from unittest.mock import Mock
+    return Mock()

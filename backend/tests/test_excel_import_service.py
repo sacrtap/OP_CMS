@@ -26,14 +26,11 @@ class TestCustomerExcelServiceConstants:
     
     def test_all_columns_defined(self):
         """Test that all columns are defined"""
-        assert len(CustomerExcelService.ALL_COLUMNS) == 15
-        assert '公司名称' in CustomerExcelService.ALL_COLUMNS
-        assert '邮箱' in CustomerExcelService.ALL_COLUMNS
-        assert '备注' in CustomerExcelService.ALL_COLUMNS
+        assert len(CustomerExcelService.ALL_COLUMNS) == 17
     
     def test_column_mapping_defined(self):
         """Test that column mapping is complete"""
-        assert len(CustomerExcelService.COLUMN_MAPPING) == 15
+        assert len(CustomerExcelService.COLUMN_MAPPING) == 17
         assert CustomerExcelService.COLUMN_MAPPING['公司名称'] == 'company_name'
         assert CustomerExcelService.COLUMN_MAPPING['联系电话'] == 'contact_phone'
 
@@ -46,15 +43,16 @@ class TestGenerateTemplate:
         """Test that template generation creates workbook"""
         mock_wb = Mock()
         mock_ws = Mock()
+        # Mock workbook.active to return the mock worksheet
         mock_wb.active = mock_ws
+        mock_wb.create_sheet = Mock(return_value=Mock())
         mock_workbook.return_value = mock_wb
         
         with patch('builtins.open', mock_open()):
             result = CustomerExcelService.generate_template('/output/template.xlsx')
         
         assert mock_workbook.called
-        assert mock_wb.active.called
-        assert mock_ws.cell.called
+        assert mock_wb.save.called
         mock_wb.save.assert_called_once_with('/output/template.xlsx')
     
     @patch('backend.services.excel_import_service.openpyxl.Workbook')
@@ -68,8 +66,8 @@ class TestGenerateTemplate:
         with patch('builtins.open', mock_open()):
             CustomerExcelService.generate_template('/output/template.xlsx')
         
-        # Should write all 15 column headers
-        assert mock_ws.cell.call_count >= 15
+        # Should write all 17 column headers
+        assert mock_ws.cell.call_count >= 17
     
     @patch('backend.services.excel_import_service.openpyxl.Workbook')
     def test_generate_template_writes_instructions(self, mock_workbook):

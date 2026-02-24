@@ -85,8 +85,8 @@ class BackupService:
             return backup_info
             
         except subprocess.CalledProcessError as e:
-            logger.error(f"Backup failed: {str(e)}")
-            raise Exception(f"Database backup failed: {str(e)}")
+            logger.error(f"Backup failed: mysqldump failed - {str(e)}")
+            raise Exception("Database backup failed") from e
         except Exception as e:
             logger.error(f"Backup failed: {str(e)}")
             raise
@@ -99,18 +99,20 @@ class BackupService:
             backup_path: Path to backup file
             
         Returns:
-            Restore information
+            Restoration information
         """
         try:
-            logger.info(f"Restoring backup: {backup_path}")
+            # Check if backup file exists
+            if not os.path.exists(backup_path):
+                raise FileNotFoundError(f"Backup file not found: {backup_path}")
             
-            # Decompress if needed
+            # Decompress if gzipped
             if backup_path.endswith('.gz'):
                 decompressed_path = self._decompress_file(backup_path)
             else:
                 decompressed_path = backup_path
             
-            # Create mysql command
+            # Create mysql restore command
             restore_cmd = [
                 'mysql',
                 f'--host={self.db_host}',
@@ -121,6 +123,7 @@ class BackupService:
             ]
             
             # Execute restore
+            logger.info(f"Restoring backup: {backup_path}")
             with open(decompressed_path, 'r') as f:
                 subprocess.run(restore_cmd, stdin=f, check=True)
             
@@ -131,19 +134,21 @@ class BackupService:
             restore_info = {
                 'backup_file': backup_path,
                 'status': 'completed',
-                'restored_at': datetime.utcnow().isoformat(),
-                'message': 'Database restored successfully'
+                'restored_at': datetime.utcnow().isoformat()
             }
             
             logger.info(f"Backup restored successfully: {backup_path}")
             
             return restore_info
             
+        except FileNotFoundError as e:
+            logger.error(f"Backup restore failed: {str(e)}")
+            raise Exception("Database restore failed") from e
         except subprocess.CalledProcessError as e:
-            logger.error(f"Restore failed: {str(e)}")
-            raise Exception(f"Database restore failed: {str(e)}")
+            logger.error(f"Backup restore failed: mysql restore failed - {str(e)}")
+            raise Exception("Database restore failed") from e
         except Exception as e:
-            logger.error(f"Restore failed: {str(e)}")
+            logger.error(f"Backup restore failed: {str(e)}")
             raise
     
     def list_backups(self) -> List[Dict[str, Any]]:

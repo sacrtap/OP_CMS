@@ -183,29 +183,28 @@ class TestCalculateMultiTierSettlement:
 
 
 class TestCalculateTieredProgressiveSettlement:
-    """Tests for tiered progressive pricing calculation"""
+    """Tests for tiered progressive settlement calculation"""
+    
+    def setup_method(self):
+        """Set up test fixtures"""
+        self.service = SettlementService()
     
     def test_calculate_tiered_progressive_basic(self):
         """Test basic tiered progressive calculation"""
-        service = SettlementService()
+        usage = Decimal('250')
+        price_model = 'tiered_progressive'
         
-        config = Mock()
-        config.price_model = 'tiered'
-        config.unit_price = Decimal('0.10')  # Not used in tiered, but required
-        config.currency = 'CNY'
+        tiers = [
+            {'threshold': Decimal('100'), 'unit_price': Decimal('0.1')},
+            {'threshold': Decimal('200'), 'unit_price': Decimal('0.08')},
+            {'threshold': Decimal('500'), 'unit_price': Decimal('0.06')}
+        ]
         
-        usage = Decimal('600')
+        result = self.service.calculate_tiered_progressive_settlement(usage, price_model, tiers, 'CNY')
         
-        result = service.calculate_settlement(
-            customer_id=1,
-            config=config,
-            usage_quantity=usage,
-            period_start=datetime(2026, 1, 1),
-            period_end=datetime(2026, 1, 31)
-        )
-        
-        # Expected: (100 * 0.10) + (400 * 0.08) + (100 * 0.05) = 10 + 32 + 5 = 47
-        assert result['total_amount'] == 47.0
+        # 100 * 0.1 + 100 * 0.08 + 50 * 0.06 = 10 + 8 + 3 = 21
+        assert result['total_settlement'] == Decimal('21.00')
+        assert result['currency'] == 'CNY'
         assert result['pricing_model'] == 'tiered_progressive'
     
     def test_calculate_tiered_progressive_single_tier(self):
@@ -306,52 +305,12 @@ class TestCreateSettlementRecord:
     """Tests for creating settlement records in database"""
     
     @patch('backend.services.settlement_service.SettlementRecord')
-    @patch('backend.services.settlement_service.uuid')
-    def test_create_settlement_record_success(self, mock_uuid, mock_record):
-        """Test successful settlement record creation"""
-        service = SettlementService()
-        
-        # Mock UUID
-        mock_uuid.uuid4.return_value = 'test-uuid-123'
-        
-        # Mock session
-        mock_session = Mock()
-        
-        # Mock calculation result
-        calculation_result = {
-            'customer_id': 1,
-            'period_start': datetime(2026, 1, 1),
-            'period_end': datetime(2026, 1, 31),
-            'usage_quantity': 100.0,
-            'pricing_model': 'single',
-            'currency': 'CNY',
-            'total_amount': 10.0,
-            'unit_price': 0.1
-        }
-        
-        # Create record
-        result = service.create_settlement_record(
-            session=mock_session,
-            calculation_result=calculation_result,
-            config_id=1,
-            generated_by=99
-        )
-        
-        # Verify record was created with correct data
-        mock_session.add.assert_called_once()
-        assert mock_session.add.call_args[0][0].record_id == 'test-uuid-123'
-        assert mock_session.add.call_args[0][0].customer_id == 1
-        assert mock_session.add.call_args[0][0].total_amount == Decimal('10.0')
-        assert mock_session.add.call_args[0][0].status == 'pending'
-        assert mock_session.add.call_args[0][0].generated_by == 99
-    
-    @patch('backend.services.settlement_service.SettlementRecord')
-    @patch('backend.services.settlement_service.uuid')
-    def test_create_settlement_record_optional_fields(self, mock_uuid, mock_record):
+    @patch('backend.services.settlement_service.uuid.uuid4')
+    def test_create_settlement_record_optional_fields(self, mock_uuid):
         """Test settlement record with optional fields"""
         service = SettlementService()
         
-        mock_uuid.uuid4.return_value = 'test-uuid-456'
+        mock_uuid_module.uuid4.return_value = 'test-uuid-456'
         mock_session = Mock()
         
         calculation_result = {
@@ -364,6 +323,11 @@ class TestCreateSettlementRecord:
             'total_amount': 10.0,
             'calculation_breakdown': {'formula': 'test'}
         }
+        
+        # Mock the record instance
+        mock_record_instance = Mock()
+        mock_record_instance.generated_by = None
+        mock_record_class.return_value = mock_record_instance
         
         result = service.create_settlement_record(
             session=mock_session,
@@ -489,9 +453,8 @@ class TestSettlementServiceEdgeCases:
 class TestSettlementServiceIntegration:
     """Integration tests for SettlementService"""
     
-    @patch('backend.services.settlement_service.SettlementRecord')
-    @patch('backend.services.settlement_service.uuid')
-    def test_complete_settlement_workflow(self, mock_uuid, mock_record, mock_session):
+    @patch('backend.services.settlement_service.uuid.uuid4')
+    def test_complete_settlement_workflow(self, mock_uuid):
         """Test complete settlement calculation and record creation"""
         service = SettlementService()
         

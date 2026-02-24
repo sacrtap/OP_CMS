@@ -1,6 +1,7 @@
 # OP_CMS Data Validation Service
 # Story 6.1: Data Quality Validation & Duplicate Detection
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Any, Optional, Tuple
 import re
@@ -48,6 +49,16 @@ class ValidationResult:
 class DataValidationService:
     """Service for validating imported data"""
     
+    def __init__(self, batch_size: int = 1000, max_errors: int = 100):
+        """Initialize DataValidationService
+        
+        Args:
+            batch_size: Number of records to process in one batch
+            max_errors: Maximum number of errors to collect before stopping
+        """
+        self.batch_size = batch_size
+        self.max_errors = max_errors
+    
     # Required fields for customer import
     REQUIRED_FIELDS = ['company_name', 'contact_name', 'contact_phone']
     
@@ -69,6 +80,309 @@ class DataValidationService:
     
     # Duplicate detection fields
     DUPLICATE_FIELDS = ['company_name', 'credit_code', 'erp_system', 'erp_customer_code']
+    
+    def validate_customer_data(self, customer_data: dict) -> tuple[bool, list]:
+        """
+        Validate customer data
+        
+        Args:
+            customer_data: Dictionary containing customer data
+            
+        Returns:
+            Tuple of (is_valid, errors)
+            - is_valid: True if data is valid, False otherwise
+            - errors: List of error messages
+        """
+        errors = []
+        
+        # Check required fields
+        for field in self.REQUIRED_FIELDS:
+            value = customer_data.get(field)
+            if not value or (isinstance(value, str) and not value.strip()):
+                errors.append(f'{field} 为必填字段')
+        
+        # Validate phone format
+        phone = customer_data.get('contact_phone')
+        if phone:
+            is_phone_valid, phone_error = self.validate_phone(str(phone))
+            if not is_phone_valid:
+                errors.append(f'contact_phone: {phone_error}')
+        
+        # Validate email format
+        email = customer_data.get('email')
+        if email:
+            is_email_valid, email_error = self.validate_email(str(email))
+            if not is_email_valid:
+                errors.append(f'email: {email_error}')
+        
+        # Validate credit code
+        credit_code = customer_data.get('credit_code')
+        if credit_code:
+            is_credit_valid, credit_error = self.validate_credit_code(str(credit_code))
+            if not is_credit_valid:
+                errors.append(f'credit_code: {credit_error}')
+        
+        # Validate enum values
+        customer_type = customer_data.get('customer_type')
+        if customer_type and customer_type not in ['enterprise', 'individual']:
+            errors.append('customer_type 必须为 enterprise 或 individual')
+        
+        level = customer_data.get('level')
+        if level and level not in ['vip', 'standard', 'economy']:
+            errors.append('level 必须为 vip, standard 或 economy')
+        
+        status = customer_data.get('status')
+        if status and status not in ['active', 'inactive', 'potential']:
+            errors.append('status 必须为 active, inactive 或 potential')
+        
+        return (len(errors) == 0, errors)
+    
+    def validate_phone(self, phone: str) -> tuple[bool, str]:
+        """
+        Validate phone number
+        
+        Args:
+            phone: Phone number string
+            
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        if not phone:
+            return (False, '联系电话不能为空')
+        
+        # Remove whitespace
+        phone = phone.strip()
+        
+        # Check length (8-15 digits)
+        if len(phone) < 8 or len(phone) > 15:
+            return (False, '联系电话长度必须为 8-15 位')
+        
+        # Check format (only digits, spaces, dashes, plus, parentheses)
+        if not re.match(r'^[\d\s\-\+\(\)]+$', phone):
+            return (False, '联系电话格式不正确（只能包含数字、空格、破折号、加号和括号）')
+        
+        return (True, '')
+    
+    def validate_email(self, email: str) -> tuple[bool, str]:
+        """
+        Validate email address
+        
+        Args:
+            email: Email address string
+            
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        if not email:
+            return (True, '')  # Email is optional
+        
+        email = email.strip()
+        
+        # Basic email pattern
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        
+        if not re.match(pattern, email):
+            return (False, '邮箱格式不正确')
+        
+        return (True, '')
+    
+    def validate_credit_code(self, code: str) -> tuple[bool, str]:
+        """
+        Validate unified social credit code
+        
+        Args:
+            code: Credit code string
+            
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        if not code or not code.strip():
+            return (False, '统一社会信用代码不能为空')
+        
+        code = code.strip().upper()
+        
+        # Check length
+        if len(code) != 18:
+            return (False, '统一社会信用代码必须为 18 位')
+        
+        # Check characters (only uppercase letters and digits)
+        if not re.match(r'^[A-Z0-9]+$', code):
+            return (False, '统一社会信用代码只能包含字母和数字（alphanumeric characters）')
+        
+        return (True, '')
+    
+    def validate_data_batch(self, batch_data: list[dict]) -> dict:
+        """
+        Validate batch data
+        
+        Args:
+            batch_data: List of customer data dictionaries
+            
+        Returns:
+            Dictionary with validation results
+        """
+        results = {
+            'total': len(batch_data),
+            'valid': 0,
+            'invalid': 0,
+            'errors': [],
+            'details': []
+        }
+        
+        errors_collected = 0
+        
+        for idx, data in enumerate(batch_data, 1):
+            # Stop if max_errors reached
+            if errors_collected >= self.max_errors:
+                break
+            
+            is_valid, errors = self.validate_customer_data(data)
+            
+            if is_valid:
+                results['valid'] += 1
+            else:
+                results['invalid'] += 1
+                errors_collected += len(errors)
+                results['errors'].append({
+                    'row': idx,
+                    'errors': errors
+                })
+            
+            results['details'].append({
+                'row': idx,
+                'is_valid': is_valid,
+                'errors': errors
+            })
+        
+        results['validation_rate'] = results['valid'] / results['total'] if results['total'] > 0 else 0
+        
+        return results
+    
+    def generate_quality_report(self, validation_results: dict) -> dict:
+        """
+        Generate data quality report
+        
+        Args:
+            validation_results: Dictionary with validation results
+                {
+                    'total': int,
+                    'valid': int,
+                    'invalid': int,
+                    'errors': list
+                }
+            
+        Returns:
+            Quality report dictionary
+        """
+        total = validation_results.get('total', 0)
+        valid = validation_results.get('valid', 0)
+        invalid = validation_results.get('invalid', 0)
+        
+        # Calculate score (0-100)
+        score = (valid / total * 100) if total > 0 else 0
+        
+        # Determine quality level
+        if score >= 95:
+            quality_level = '优秀 (Excellent)'
+        elif score >= 90:
+            quality_level = '良好 (Good)'
+        elif score >= 80:
+            quality_level = '中等 (Fair)'
+        else:
+            quality_level = '需改进 (Needs Improvement)'
+        
+        # Collect error summary
+        errors = validation_results.get('errors', [])
+        error_summary = {}
+        for error in errors:
+            field = error.get('field', 'unknown')
+            error_msg = error.get('error', 'Unknown error')
+            key = f"{field}: {error_msg}"
+            error_summary[key] = error_summary.get(key, 0) + 1
+        
+        # Sort errors by frequency
+        sorted_errors = sorted(
+            error_summary.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )[:10]  # Top 10 errors
+        
+        return {
+            'total_records': total,
+            'valid_records': valid,
+            'invalid_records': invalid,
+            'quality_score': round(score, 2),
+            'quality_level': quality_level,
+            'error_summary': [
+                {'error': error, 'count': count}
+                for error, count in sorted_errors
+            ],
+            'generated_at': datetime.utcnow().isoformat()
+        }
+    
+    def _find_by_company_name(self, session, company_name: str) -> list:
+        """Find customers by company name"""
+        try:
+            from backend.models.database_models import Customer
+            results = session.query(Customer).filter(
+                Customer.company_name == company_name
+            ).limit(10).all()
+            return results
+        except Exception as e:
+            logger.error(f"Error finding by company name: {e}")
+            return []
+    
+    def _find_by_credit_code(self, session, credit_code: str) -> list:
+        """Find customers by credit code"""
+        try:
+            from backend.models.database_models import Customer
+            results = session.query(Customer).filter(
+                Customer.credit_code == credit_code
+            ).limit(10).all()
+            return results
+        except Exception as e:
+            logger.error(f"Error finding by credit code: {e}")
+            return []
+    
+    def validate_data_batch(self, batch_data: list[dict]) -> dict:
+        """
+        Validate batch data
+        
+        Args:
+            batch_data: List of customer data dictionaries
+            
+        Returns:
+            Dictionary with validation results
+        """
+        results = {
+            'total': len(batch_data),
+            'valid': 0,
+            'invalid': 0,
+            'errors': [],
+            'details': []
+        }
+        
+        for idx, data in enumerate(batch_data, 1):
+            is_valid, errors = self.validate_customer_data(data)
+            
+            if is_valid:
+                results['valid'] += 1
+            else:
+                results['invalid'] += 1
+                results['errors'].append({
+                    'row': idx,
+                    'errors': errors
+                })
+            
+            results['details'].append({
+                'row': idx,
+                'is_valid': is_valid,
+                'errors': errors
+            })
+        
+        results['validation_rate'] = results['valid'] / results['total'] if results['total'] > 0 else 0
+        
+        return results
     
     def validate_row(self, row_data: Dict[str, Any]) -> ValidationResult:
         """

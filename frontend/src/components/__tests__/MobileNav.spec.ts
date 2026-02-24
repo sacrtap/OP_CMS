@@ -5,7 +5,7 @@
 
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import MobileNav from '../components/MobileNav.vue'
+import MobileNav from '../MobileNav.vue'
 
 describe('MobileNav', () => {
   beforeEach(() => {

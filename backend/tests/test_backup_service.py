@@ -46,36 +46,27 @@ class TestBackupServiceInit:
 class TestCreateBackup:
     """Tests for create_backup method"""
     
-    @patch('backend.services.backup_service.subprocess.run')
     @patch('backend.services.backup_service.os.path.getsize')
-    @patch('backend.services.backup_service.datetime')
-    def test_create_full_backup(self, mock_datetime, mock_getsize, mock_run):
+    @patch('backend.services.backup_service.subprocess.run')
+    def test_create_full_backup(self, mock_run, mock_getsize):
         """Test creating a full backup"""
-        # Mock datetime
-        mock_datetime.utcnow.return_value = datetime(2026, 2, 25, 10, 30, 0)
+        # Mock subprocess success
+        mock_run.return_value = Mock(returncode=0)
         
         # Mock file size
         mock_getsize.return_value = 1048576  # 1MB
         
         with patch.object(BackupService, '_compress_file', return_value='/backups/op_cms_full_20260225_103000.sql.gz'):
             with patch('os.remove'):
-                with patch('os.path.join', return_value='/backups/op_cms_full_20260225_103000.sql'):
-                    with patch.object(BackupService, '__init__', lambda x, backup_dir='./backups': None):
-                        service = BackupService()
-                        service.backup_dir = './backups'
-                        service.db_host = 'localhost'
-                        service.db_port = '3306'
-                        service.db_name = 'op_cms'
-                        service.db_user = 'op_cms_user'
-                        service.db_password = 'password'
-                        
-                        result = service.create_backup(backup_type='full', description='Test backup')
-                        
-                        assert result['type'] == 'full'
-                        assert result['status'] == 'completed'
-                        assert result['description'] == 'Test backup'
-                        assert result['size'] == 1048576
-                        assert result['size_mb'] == 1.0
+                with patch('builtins.open', mock_open()):
+                    service = BackupService()
+                    result = service.create_backup(backup_type='full', description='Test backup')
+                    
+                    assert result['type'] == 'full'
+                    assert result['status'] == 'completed'
+                    assert result['description'] == 'Test backup'
+                    assert result['size'] == 1048576
+                    assert result['size_mb'] == 1.0
     
     @patch('backend.services.backup_service.subprocess.run')
     def test_create_backup_subprocess_failure(self, mock_run):
@@ -99,6 +90,11 @@ class TestCreateBackup:
         with patch.object(BackupService, '__init__', lambda x, backup_dir='./backups': None):
             service = BackupService()
             service.backup_dir = './backups'
+            service.db_host = 'localhost'
+            service.db_port = '3306'
+            service.db_name = 'op_cms'
+            service.db_user = 'op_cms_user'
+            service.db_password = 'password'
             
             # Should still work, type is just for naming
             with patch.object(service, '_compress_file', return_value='/path/backup.sql.gz'):
@@ -111,9 +107,12 @@ class TestCreateBackup:
 class TestRestoreBackup:
     """Tests for restore_backup method"""
     
+    @patch('backend.services.backup_service.os.path.exists')
     @patch('backend.services.backup_service.subprocess.run')
-    def test_restore_backup_success(self, mock_run):
+    def test_restore_backup_success(self, mock_run, mock_exists):
         """Test successful backup restoration"""
+        mock_exists.return_value = True
+        
         with patch.object(BackupService, '__init__', lambda x, backup_dir='./backups': None):
             service = BackupService()
             service.backup_dir = './backups'
@@ -123,12 +122,13 @@ class TestRestoreBackup:
             service.db_user = 'op_cms_user'
             service.db_password = 'password'
             
-            result = service.restore_backup('/backups/backup.sql.gz')
-            
-            assert result['status'] == 'completed'
-            assert result['backup_file'] == '/backups/backup.sql.gz'
-            assert 'restored_at' in result
-            mock_run.assert_called_once()
+            with patch.object(service, '_decompress_file', return_value='/tmp/backup.sql'):
+                result = service.restore_backup('/backups/backup.sql.gz')
+                
+                assert result['status'] == 'completed'
+                assert result['backup_file'] == '/backups/backup.sql.gz'
+                assert 'restored_at' in result
+                mock_run.assert_called_once()
     
     @patch('backend.services.backup_service.subprocess.run')
     def test_restore_backup_failure(self, mock_run):

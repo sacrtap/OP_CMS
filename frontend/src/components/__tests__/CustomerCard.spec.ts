@@ -5,7 +5,7 @@
 
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
-import CustomerCard from '../components/CustomerCard.vue'
+import CustomerCard from '../CustomerCard.vue'
 import { User, Phone, Location } from '@element-plus/icons-vue'
 
 describe('CustomerCard', () => {

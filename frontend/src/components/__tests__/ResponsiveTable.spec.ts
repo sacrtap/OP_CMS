@@ -5,8 +5,8 @@
 
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
-import ResponsiveTable from '../components/ResponsiveTable.vue'
-import CustomerCard from '../components/CustomerCard.vue'
+import ResponsiveTable from '../ResponsiveTable.vue'
+import CustomerCard from '../CustomerCard.vue'
 
 describe('ResponsiveTable', () => {
   const mockData = [
