@@ -86,10 +86,10 @@ development_status:
   6-3-数据导出功能: backlog
   epic-6-retrospective: optional
 
-  epic-7: in-progress
-  7-1-系统参数配置: backlog
-  7-2-系统运行状态监控: backlog
-  7-3-数据备份与恢复: backlog
-  7-4-移动端访问支持: backlog
-  7-5-Celery异步任务集成: backlog
-  epic-7-retrospective: optional
+  epic-7: done
+  7-1-系统参数配置：done
+  7-2-系统运行状态监控：done
+  7-3-数据备份与恢复：done
+  7-4-移动端访问支持：done
+  7-5-Celery 异步任务集成：done
+  epic-7-retrospective: in-progress
