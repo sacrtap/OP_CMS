@@ -81,14 +81,14 @@ development_status:
   5-3-操作审计日志: backlog
   epic-5-retrospective: optional
 
-  epic-6: backlog
+  epic-6: in-progress
   6-1-数据质量验证与重复检测: backlog
   6-3-数据导出功能: backlog
   epic-6-retrospective: optional
 
   epic-7: backlog
-  6-1-系统参数配置: backlog
-  6-2-系统运行状态监控: backlog
-  6-3-数据备份与恢复: backlog
-  6-4-移动端访问支持: backlog
+  7-1-系统参数配置: backlog
+  7-2-系统运行状态监控: backlog
+  7-3-数据备份与恢复: backlog
+  7-4-移动端访问支持: backlog
   epic-7-retrospective: optional
