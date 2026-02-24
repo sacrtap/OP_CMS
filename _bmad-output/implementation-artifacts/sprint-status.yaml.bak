@@ -59,7 +59,7 @@ development_status:
   2-4-价格配置版本控制: backlog
   epic-2-retrospective: optional
 
-  epic-3: backlog
+  epic-3: in-progress
   3-1-自动化账单生成: backlog
   3-2-手工录入特殊场景结算结果: backlog
   3-3-账单校验与发送: backlog
