@@ -1,0 +1,4 @@
+# Ignore MySQL data files and logs
+*.log
+*.pid
+mysql/

@@ -1,0 +1,4 @@
+# Ignore Redis data files and logs
+dump.rdb
+appendonly.aof
+*.log

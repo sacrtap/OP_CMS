@@ -1,0 +1,4 @@
+# Ignore frontend build artifacts and node modules
+node_modules/
+dist/
+npm-debug.log*

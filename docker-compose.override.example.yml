@@ -1,0 +1,36 @@
+# Docker Compose override example for custom configurations
+# Copy this file to docker-compose.override.yml and customize
+
+version: '3.8'
+
+services:
+  # Example: Override backend environment
+  backend:
+    environment:
+      - DEBUG=True
+      - LOG_LEVEL=DEBUG
+  
+  # Example: Add port mapping for backend debugging
+  # backend:
+  #   ports:
+  #     - "8000:8000"
+  
+  # Example: Add additional volumes
+  # backend:
+  #   volumes:
+  #     - ./custom-config:/app/config
+  
+  # Example: Add resource limits
+  # backend:
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '2'
+  #         memory: 1G
+  
+  # Example: Enable Celery services by default
+  # celery-worker:
+  #   profiles: []
+  
+  # celery-beat:
+  #   profiles: []

@@ -1,0 +1,87 @@
+# OP_CMS Docker Compose - Development Configuration
+# This configuration is optimized for local development with hot-reload
+
+version: '3.8'
+
+services:
+  # Frontend Development Server
+  frontend-dev:
+    build:
+      context: ../
+      dockerfile: docker/frontend/Dockerfile
+      target: development
+    container_name: op_cms_frontend_dev
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8000
+    volumes:
+      - ../src:/app/src
+      - ../public:/app/public
+      - ../package.json:/app/package.json
+    networks:
+      - op_cms_network
+
+  # Backend Development Server
+  backend-dev:
+    build:
+      context: ../
+      dockerfile: docker/backend/Dockerfile
+      target: development
+    container_name: op_cms_backend_dev
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENV=development
+      - DATABASE_URL=mysql+pymysql://op_cms_user:SecureUserPassword456!@mysql:3306/op_cms
+      - REDIS_URL=redis://:SecureRedisPassword789!@redis:6379/0
+      - DEBUG=True
+    volumes:
+      - ../backend:/app/backend
+      - ../tests:/app/tests
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - op_cms_network
+
+  # MySQL Database
+  mysql:
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    container_name: op_cms_mysql_dev
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=op_cms
+      - MYSQL_USER=op_cms_user
+      - MYSQL_PASSWORD=SecureUserPassword456!
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    networks:
+      - op_cms_network
+
+  # Redis Cache
+  redis:
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
+    container_name: op_cms_redis_dev
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=SecureRedisPassword789!
+    networks:
+      - op_cms_network
+
+networks:
+  op_cms_network:
+    driver: bridge
+
+volumes:
+  mysql_dev_data:
+    driver: local
