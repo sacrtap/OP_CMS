@@ -16,8 +16,10 @@ Endpoints:
 from sanic import Blueprint, json, request
 from sanic.exceptions import NotFound, BadRequest
 from typing import Optional
+from sqlalchemy import or_, asc, desc
 import logging
 import uuid
+from datetime import datetime
 
 from backend.models.database_models import (
     Customer, CustomerCreate, CustomerUpdate, CustomerResponse, CustomerListResponse
@@ -32,15 +34,22 @@ customer_bp = Blueprint('customer', url_prefix='/api/v1/customers')
 @customer_bp.route('', methods=['GET'])
 async def list_customers(req: request.Request):
     """
-    List customers with pagination and filtering
+    List customers with pagination and advanced filtering
     
     Query Parameters:
     - page: Page number (default: 1)
     - page_size: Items per page (default: 20)
-    - search: Search term (company_name or contact_name)
+    - search: Search term (multi-field: company_name, contact_name, credit_code)
+    - search_fields: Comma-separated fields to search (default: company_name,contact_name)
     - status: Filter by status (active, inactive, potential)
     - province: Filter by province
+    - city: Filter by city
     - level: Filter by customer level (vip, standard, economy)
+    - customer_type: Filter by type (enterprise, individual)
+    - source: Filter by source (direct, referral, marketing)
+    - created_from: Filter by created_at >= date (ISO format)
+    - created_to: Filter by created_at <= date (ISO format)
+    - sort: Sort field and order (e.g., 'company_name:asc,created_at:desc')
     
     Returns:
     - Customer list with pagination metadata
@@ -50,9 +59,16 @@ async def list_customers(req: request.Request):
         page = max(1, int(req.args.get('page', 1)))
         page_size = min(100, max(1, int(req.args.get('page_size', 20))))
         search = req.args.get('search', '')
+        search_fields = req.args.get('search_fields', 'company_name,contact_name').split(',')
         status = req.args.get('status', '')
         province = req.args.get('province', '')
+        city = req.args.get('city', '')
         level = req.args.get('level', '')
+        customer_type = req.args.get('customer_type', '')
+        source = req.args.get('source', '')
+        created_from = req.args.get('created_from', '')
+        created_to = req.args.get('created_to', '')
+        sort = req.args.get('sort', 'created_at:desc')
         
         # Calculate offset
         offset = (page - 1) * page_size
@@ -65,27 +81,68 @@ async def list_customers(req: request.Request):
             # Build query with filters
             query = session.query(Customer)
             
+            # Multi-field search
             if search:
-                search_term = f'%{search}%'
-                query = query.filter(
-                    (Customer.company_name.like(search_term)) |
-                    (Customer.contact_name.like(search_term))
-                )
+                search_conditions = []
+                for field in search_fields:
+                    field = field.strip()
+                    if hasattr(Customer, field):
+                        search_conditions.append(getattr(Customer, field).like(f'%{search}%'))
+                if search_conditions:
+                    query = query.filter(or_(*search_conditions))
             
+            # Exact filters
             if status:
                 query = query.filter(Customer.status == status)
-            
             if province:
                 query = query.filter(Customer.province == province)
-            
+            if city:
+                query = query.filter(Customer.city == city)
             if level:
                 query = query.filter(Customer.level == level)
+            if customer_type:
+                query = query.filter(Customer.customer_type == customer_type)
+            if source:
+                query = query.filter(Customer.source == source)
+            
+            # Date range filter
+            if created_from:
+                try:
+                    from datetime import datetime
+                    from_date = datetime.fromisoformat(created_from)
+                    query = query.filter(Customer.created_at >= from_date)
+                except:
+                    pass
+            
+            if created_to:
+                try:
+                    from datetime import datetime
+                    to_date = datetime.fromisoformat(created_to)
+                    query = query.filter(Customer.created_at <= to_date)
+                except:
+                    pass
             
             # Get total count
             total = query.count()
             
+            # Build sort
+            from sqlalchemy import asc, desc
+            sort_clauses = []
+            for sort_item in sort.split(','):
+                if ':' in sort_item:
+                    field, order = sort_item.split(':', 1)
+                    field = field.strip()
+                    order = order.strip().lower()
+                    if hasattr(Customer, field):
+                        sort_clauses.append(asc(getattr(Customer, field)) if order == 'asc' else desc(getattr(Customer, field)))
+            
+            if sort_clauses:
+                query = query.order_by(*sort_clauses)
+            else:
+                query = query.order_by(Customer.created_at.desc())
+            
             # Get paginated results
-            customers = query.order_by(Customer.created_at.desc()).offset(offset).limit(page_size).all()
+            customers = query.offset(offset).limit(page_size).all()
             
             # Calculate total pages
             total_pages = (total + page_size - 1) // page_size
