@@ -75,7 +75,7 @@ development_status:
   4-5-报表订阅功能: backlog
   epic-4-retrospective: optional
 
-  epic-5: backlog
+  epic-5: in-progress
   5-1-用户账户管理: backlog
   5-2-角色分配与权限控制: backlog
   5-3-操作审计日志: backlog
