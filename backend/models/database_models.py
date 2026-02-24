@@ -30,27 +30,56 @@ Base = declarative_base()
 # ==================== Customer Models ====================
 
 class Customer(Base):
-    """Customer Information Model"""
+    """Customer Information Model - Extended for Story 1.1"""
     __tablename__ = 'customers'
     
+    # Primary key
     id = Column(Integer, primary_key=True, autoincrement=True)
     customer_id = Column(String(36), unique=True, nullable=False, comment="Unique customer identifier (UUID)")
-    name = Column(String(100), nullable=False, comment="Customer name")
-    contact_type = Column(String(20), nullable=False, comment="Contact type: individual or corporate")
-    contact_name = Column(String(100), nullable=False, comment="Contact person name")
-    phone = Column(String(20), comment="Contact phone number")
-    email = Column(String(100), comment="Contact email")
-    address = Column(String(500), comment="Contact address")
-    status = Column(String(20), default='active', comment="Status: active, inactive, banned")
+    
+    # Core fields (required)
+    company_name = Column(String(200), nullable=False, comment="Company name (required, unique)")
+    contact_name = Column(String(100), nullable=False, comment="Contact person name (required)")
+    contact_phone = Column(String(20), nullable=False, comment="Contact phone (required)")
+    
+    # Optional fields - Business identification
+    credit_code = Column(String(50), unique=True, comment="Unified social credit code (18 digits, GB 32100-2015)")
+    customer_type = Column(String(20), default='enterprise', comment="Customer type: enterprise, individual")
+    
+    # Optional fields - Location
+    province = Column(String(50), comment="Province")
+    city = Column(String(50), comment="City")
+    address = Column(String(500), comment="Full address")
+    
+    # Optional fields - Contact information
+    email = Column(String(100), comment="Email address")
+    website = Column(String(200), comment="Company website")
+    
+    # Optional fields - Business information
+    industry = Column(String(100), comment="Industry category")
+    
+    # Optional fields - ERP integration
+    erp_system = Column(String(100), comment="ERP system name")
+    erp_customer_code = Column(String(50), comment="Customer code in ERP system")
+    
+    # Optional fields - Customer attributes
+    status = Column(String(20), default='active', comment="Status: active, inactive, potential")
+    level = Column(String(20), default='standard', comment="Level: vip, standard, economy")
+    source = Column(String(20), default='direct', comment="Source: direct, referral, marketing")
+    remarks = Column(Text, comment="Additional remarks")
+    
+    # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, comment="Creation timestamp")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment="Update timestamp")
-    metadata = Column(JSON, comment="Additional metadata in JSON format")
     
     # Indexes
     __table_args__ = (
-        Index('idx_customer_name', 'name'),
-        Index('idx_customer_contact', 'contact_name'),
+        Index('idx_customer_company_name', 'company_name'),
+        Index('idx_customer_credit_code', 'credit_code'),
+        Index('idx_customer_contact_name', 'contact_name'),
         Index('idx_customer_status', 'status'),
+        Index('idx_customer_level', 'level'),
+        Index('idx_customer_province', 'province'),
     )
     
     # Relationships
@@ -59,22 +88,133 @@ class Customer(Base):
 
 
 class CustomerCreate(BaseModel):
-    """Create customer request model"""
-    customer_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    name: str = Field(..., min_length=1, max_length=100)
-    contact_type: str = Field(..., pattern="^(individual|corporate)$")
+    """Create customer request model - Story 1.1"""
+    # Required fields
+    company_name: str = Field(..., min_length=1, max_length=200)
     contact_name: str = Field(..., min_length=1, max_length=100)
-    phone: Optional[str] = Field(None, max_length=20)
-    email: Optional[str] = Field(None, max_length=100)
-    address: Optional[str] = Field(None, max_length=500)
-    status: Optional[str] = Field('active', pattern="^(active|inactive|banned)$")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    contact_phone: str = Field(..., min_length=1, max_length=20)
     
-    @field_validator('phone')
+    # Optional fields - Business identification
+    credit_code: Optional[str] = Field(None, max_length=50)
+    customer_type: Optional[str] = Field('enterprise', pattern="^(enterprise|individual)$")
+    
+    # Optional fields - Location
+    province: Optional[str] = Field(None, max_length=50)
+    city: Optional[str] = Field(None, max_length=50)
+    address: Optional[str] = Field(None, max_length=500)
+    
+    # Optional fields - Contact information
+    email: Optional[str] = Field(None, max_length=100)
+    website: Optional[str] = Field(None, max_length=200)
+    
+    # Optional fields - Business information
+    industry: Optional[str] = Field(None, max_length=100)
+    
+    # Optional fields - ERP integration
+    erp_system: Optional[str] = Field(None, max_length=100)
+    erp_customer_code: Optional[str] = Field(None, max_length=50)
+    
+    # Optional fields - Customer attributes
+    status: Optional[str] = Field('active', pattern="^(active|inactive|potential)$")
+    level: Optional[str] = Field('standard', pattern="^(vip|standard|economy)$")
+    source: Optional[str] = Field('direct', pattern="^(direct|referral|marketing)$")
+    remarks: Optional[str] = None
+    
+    @field_validator('contact_phone')
     def validate_phone(cls, v):
-        if v and not v.replace('+', '').replace('-', '').replace(' ', '').isdigit():
-            raise ValueError('Phone number must contain only digits, spaces, +, and -')
+        """Validate phone number format (Mainland China: +86 prefix, 11 digits)"""
+        if v:
+            cleaned = v.replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
+            if not cleaned.isdigit():
+                raise ValueError('Phone number must contain only digits, spaces, +, -, and parentheses')
+            if len(cleaned) < 8 or len(cleaned) > 15:
+                raise ValueError('Phone number length must be between 8 and 15 digits')
         return v
+    
+    @field_validator('email')
+    def validate_email(cls, v):
+        """Validate email format"""
+        if v:
+            import re
+            pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(pattern, v):
+                raise ValueError('Invalid email format')
+        return v
+    
+    @field_validator('credit_code')
+    def validate_credit_code(cls, v):
+        """Validate unified social credit code (GB 32100-2015: 18 characters)"""
+        if v:
+            if len(v) != 18:
+                raise ValueError('Unified social credit code must be 18 characters')
+            # Basic format check: 18 alphanumeric characters
+            if not v.isalnum():
+                raise ValueError('Unified social credit code must contain only alphanumeric characters')
+        return v
+
+
+class CustomerUpdate(BaseModel):
+    """Update customer request model - Story 1.1"""
+    # All fields are optional for update
+    company_name: Optional[str] = Field(None, min_length=1, max_length=200)
+    contact_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    contact_phone: Optional[str] = Field(None, min_length=1, max_length=20)
+    credit_code: Optional[str] = Field(None, max_length=50)
+    customer_type: Optional[str] = Field(None, pattern="^(enterprise|individual)$")
+    province: Optional[str] = Field(None, max_length=50)
+    city: Optional[str] = Field(None, max_length=50)
+    address: Optional[str] = Field(None, max_length=500)
+    email: Optional[str] = Field(None, max_length=100)
+    website: Optional[str] = Field(None, max_length=200)
+    industry: Optional[str] = Field(None, max_length=100)
+    erp_system: Optional[str] = Field(None, max_length=100)
+    erp_customer_code: Optional[str] = Field(None, max_length=50)
+    status: Optional[str] = Field(None, pattern="^(active|inactive|potential)$")
+    level: Optional[str] = Field(None, pattern="^(vip|standard|economy)$")
+    source: Optional[str] = Field(None, pattern="^(direct|referral|marketing)$")
+    remarks: Optional[str] = None
+    
+    # Reuse validators from CustomerCreate
+    _validate_phone = field_validator('contact_phone')(CustomerCreate.validate_phone)
+    _validate_email = field_validator('email')(CustomerCreate.validate_email)
+    _validate_credit_code = field_validator('credit_code')(CustomerCreate.validate_credit_code)
+
+
+class CustomerResponse(BaseModel):
+    """Customer response model - Story 1.1"""
+    id: int
+    customer_id: str
+    company_name: str
+    contact_name: str
+    contact_phone: str
+    credit_code: Optional[str] = None
+    customer_type: str = 'enterprise'
+    province: Optional[str] = None
+    city: Optional[str] = None
+    address: Optional[str] = None
+    email: Optional[str] = None
+    website: Optional[str] = None
+    industry: Optional[str] = None
+    erp_system: Optional[str] = None
+    erp_customer_code: Optional[str] = None
+    status: str = 'active'
+    level: str = 'standard'
+    source: str = 'direct'
+    remarks: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class CustomerListResponse(BaseModel):
+    """Customer list response with pagination - Story 1.1"""
+    customers: List[CustomerResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
 
 # ==================== Price Config Models ====================
