@@ -91,4 +91,5 @@ development_status:
   7-2-系统运行状态监控: backlog
   7-3-数据备份与恢复: backlog
   7-4-移动端访问支持: backlog
+  7-5-Celery异步任务集成: backlog
   epic-7-retrospective: optional
