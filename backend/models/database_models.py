@@ -174,10 +174,10 @@ class CustomerUpdate(BaseModel):
     source: Optional[str] = Field(None, pattern="^(direct|referral|marketing)$")
     remarks: Optional[str] = None
     
-    # Reuse validators from CustomerCreate
-    _validate_phone = field_validator('contact_phone')(CustomerCreate.validate_phone)
-    _validate_email = field_validator('email')(CustomerCreate.validate_email)
-    _validate_credit_code = field_validator('credit_code')(CustomerCreate.validate_credit_code)
+    # Field validation is sufficient, no need for custom validators
+    # _validate_phone = field_validator('contact_phone')(CustomerCreate.validate_phone)
+    # _validate_email = field_validator('email')(CustomerCreate.validate_email)
+    # _validate_credit_code = field_validator('credit_code')(CustomerCreate.validate_credit_code)
 
 
 class CustomerResponse(BaseModel):

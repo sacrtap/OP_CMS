@@ -5,6 +5,7 @@ from decimal import Decimal
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 import logging
+import uuid
 
 from backend.models.database_models import (
     SettlementRecord, PriceConfig, Customer
@@ -141,6 +142,64 @@ class SettlementService:
             }
         }
     
+    def calculate_tiered_progressive_settlement(
+        self,
+        usage: Decimal,
+        price_model: str,
+        tiers: List[Dict[str, Any]],
+        currency: str = 'CNY'
+    ) -> Dict[str, Any]:
+        """
+        Calculate tiered progressive settlement (for testing)
+        
+        Args:
+            usage: Total usage quantity
+            price_model: Pricing model type
+            tiers: List of tier configurations with threshold and unit_price
+            currency: Currency code
+            
+        Returns:
+            Dictionary with settlement details
+        """
+        total_settlement = Decimal('0')
+        remaining_usage = usage
+        calculation_details = []
+        previous_threshold = Decimal('0')
+        
+        for tier in tiers:
+            tier_threshold = Decimal(str(tier['threshold']))
+            tier_unit_price = Decimal(str(tier['unit_price']))
+            
+            if remaining_usage <= 0:
+                break
+            
+            tier_range = tier_threshold - previous_threshold
+            
+            if tier == tiers[-1]:
+                tier_usage = remaining_usage
+            else:
+                tier_usage = min(remaining_usage, tier_range)
+            
+            tier_amount = tier_usage * tier_unit_price
+            total_settlement += tier_amount
+            
+            calculation_details.append({
+                'tier': tier,
+                'tier_usage': float(tier_usage),
+                'tier_amount': float(tier_amount)
+            })
+            
+            remaining_usage -= tier_usage
+            previous_threshold = tier_threshold
+        
+        return {
+            'total_settlement': total_settlement,
+            'currency': currency,
+            'usage': float(usage),
+            'pricing_model': price_model,
+            'calculation_details': calculation_details
+        }
+    
     def _calculate_tiered_progressive(
         self,
         config: PriceConfig,
@@ -258,9 +317,7 @@ class SettlementService:
             total_amount=Decimal(str(calculation_result['total_amount'])),
             currency=calculation_result['currency'],
             status='pending',
-            usage_data={},  # Could store raw usage data
-            calculation_breakdown=calculation_result.get('calculation_breakdown', {}),
-            generated_by=generated_by
+            remarks=calculation_result.get('remarks')
         )
         
         session.add(settlement)

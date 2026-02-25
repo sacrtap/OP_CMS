@@ -8,11 +8,26 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import MobileNav from '../MobileNav.vue'
 
 describe('MobileNav', () => {
+  beforeAll(() => {
+    // Set initial window width for all tests
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 375
+    })
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('renders navigation container', () => {
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 375
+    })
+
     const wrapper = mount(MobileNav)
     expect(wrapper.find('nav').exists()).toBe(true)
   })
@@ -69,11 +84,11 @@ describe('MobileNav', () => {
     const wrapper = mount(MobileNav)
     await wrapper.vm.$nextTick()
 
-    const links = wrapper.findAll('router-link')
-    expect(links[0].attributes('to')).toBe('/customers')
-    expect(links[1].attributes('to')).toBe('/settlements')
-    expect(links[2].attributes('to')).toBe('/reports')
-    expect(links[3].attributes('to')).toBe('/dashboard')
+    const links = wrapper.findAll('.nav-item')
+    expect(links[0].attributes('href')).toBe('/customers')
+    expect(links[1].attributes('href')).toBe('/settlements')
+    expect(links[2].attributes('href')).toBe('/reports')
+    expect(links[3].attributes('href')).toBe('/dashboard')
   })
 
   it('displays correct labels for navigation items', async () => {

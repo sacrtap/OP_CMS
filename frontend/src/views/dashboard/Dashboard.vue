@@ -4,94 +4,94 @@
     <p class="last-update">数据更新时间：{{ lastUpdateTime }}</p>
 
     <!-- 核心指标卡片 -->
-    <el-row :gutter="20" class="metrics-row">
-      <el-col :span="6" v-for="metric in metrics" :key="metric.title">
-        <el-card shadow="hover" class="metric-card">
+    <a-row :gutter="20" class="metrics-row">
+      <a-col :span="6" v-for="metric in metrics" :key="metric.title">
+        <a-card hoverable class="metric-card">
           <div class="metric-header">
             <span class="metric-title">{{ metric.title }}</span>
-            <el-tooltip :content="metric.description" placement="top">
-              <el-icon><QuestionFilled /></el-icon>
-            </el-tooltip>
+            <a-tooltip :content="metric.description" position="top">
+              <icon-question-circle style="font-size: 16px; color: #999" />
+            </a-tooltip>
           </div>
           <div class="metric-value">{{ metric.value }}</div>
           <div class="metric-footer">
             <span :class="metric.trendClass">{{ metric.trend }}</span>
             <span class="metric-label">{{ metric.label }}</span>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </a-card>
+      </a-col>
+    </a-row>
 
     <!-- 趋势图表 -->
-    <el-row :gutter="20" class="charts-row">
-      <el-col :span="12">
-        <el-card shadow="hover">
-          <template #header>
+    <a-row :gutter="20" class="charts-row">
+      <a-col :span="12">
+        <a-card hoverable>
+          <template #title>
             <div class="card-header">
               <span>收入趋势</span>
-              <el-select v-model="revenueDimension" size="small" @change="loadTrendData">
-                <el-option label="日" value="day" />
-                <el-option label="周" value="week" />
-                <el-option label="月" value="month" />
-              </el-select>
+              <a-select v-model="revenueDimension" size="small" @change="loadTrendData">
+                <a-option value="day">日</a-option>
+                <a-option value="week">周</a-option>
+                <a-option value="month">月</a-option>
+              </a-select>
             </div>
           </template>
           <div ref="revenueChart" class="chart" style="height: 300px;"></div>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card shadow="hover">
-          <template #header>
+        </a-card>
+      </a-col>
+      <a-col :span="12">
+        <a-card hoverable>
+          <template #title>
             <div class="card-header">
               <span>回款趋势</span>
-              <el-select v-model="paymentDimension" size="small" @change="loadTrendData">
-                <el-option label="日" value="day" />
-                <el-option label="周" value="week" />
-                <el-option label="月" value="month" />
-              </el-select>
+              <a-select v-model="paymentDimension" size="small" @change="loadTrendData">
+                <a-option value="day">日</a-option>
+                <a-option value="week">周</a-option>
+                <a-option value="month">月</a-option>
+              </a-select>
             </div>
           </template>
           <div ref="paymentChart" class="chart" style="height: 300px;"></div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </a-card>
+      </a-col>
+    </a-row>
 
     <!-- 客户分布 -->
-    <el-row :gutter="20" class="charts-row">
-      <el-col :span="8">
-        <el-card shadow="hover">
-          <template #header>
+    <a-row :gutter="20" class="charts-row">
+      <a-col :span="8">
+        <a-card hoverable>
+          <template #title>
             <span>客户行业分布</span>
           </template>
           <div ref="industryChart" class="chart" style="height: 300px;"></div>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card shadow="hover">
-          <template #header>
+        </a-card>
+      </a-col>
+      <a-col :span="8">
+        <a-card hoverable>
+          <template #title>
             <span>客户地域分布</span>
           </template>
           <div ref="regionChart" class="chart" style="height: 300px;"></div>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card shadow="hover">
-          <template #header>
+        </a-card>
+      </a-col>
+      <a-col :span="8">
+        <a-card hoverable>
+          <template #title>
             <span>客户等级分布</span>
           </template>
           <div ref="levelChart" class="chart" style="height: 300px;"></div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </a-card>
+      </a-col>
+    </a-row>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { QuestionFilled } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { Message } from '@arco-design/web-vue'
 import * as echarts from 'echarts'
 import { dashboardAPI } from '@/api/dashboard'
+import { IconQuestionCircle } from '@arco-design/web-vue/es/icon'
 
 const lastUpdateTime = ref('')
 const revenueDimension = ref('month')
@@ -113,10 +113,11 @@ const loadMetrics = async () => {
     metrics.value[3].value = `¥${data.overdue_payment.toLocaleString()}`
     lastUpdateTime.value = new Date(data.last_updated).toLocaleString('zh-CN')
   } catch (error) {
-    ElMessage.error('加载指标数据失败')
+    Message.error('加载指标数据失败')
   }
 }
 
+// 加载趋势数据
 const loadTrendData = async () => {
   try {
     const data = await dashboardAPI.getTrends(revenueDimension.value)
@@ -130,10 +131,11 @@ const loadTrendData = async () => {
       series: [{ data: data.revenue_trend.map(item => item.value), type: 'line', smooth: true }]
     })
   } catch (error) {
-    ElMessage.error('加载趋势数据失败')
+    Message.error('加载趋势数据失败')
   }
 }
 
+// 加载客户统计
 const loadCustomerStats = async () => {
   try {
     const data = await dashboardAPI.getCustomerStats()
@@ -149,7 +151,7 @@ const loadCustomerStats = async () => {
       }]
     })
   } catch (error) {
-    ElMessage.error('加载客户统计失败')
+    Message.error('加载客户统计失败')
   }
 }
 

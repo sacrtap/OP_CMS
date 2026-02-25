@@ -7,6 +7,7 @@ from typing import Dict, List, Any, Optional, Tuple
 import re
 import logging
 from difflib import SequenceMatcher
+from sqlalchemy.orm import Session
 
 from backend.models.database_models import Customer
 
@@ -640,3 +641,71 @@ class DataValidationService:
             'validation_rate': valid_rows / total_rows if total_rows > 0 else 0,
             'results': validation_results
         }
+    
+    def detect_duplicates(
+        self,
+        customer_data: Dict[str, Any],
+        session_factory: Any = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Detect duplicate customers based on company name, contact phone, or credit code
+        
+        Args:
+            customer_data: Customer data dictionary
+            session_factory: Database session factory (optional)
+            
+        Returns:
+            List of duplicate detection results
+        """
+        duplicates = []
+        
+        # Use session if provided
+        if session_factory:
+            try:
+                with session_factory() as session:
+                    # Check by company name
+                    if customer_data.get('company_name'):
+                        company_name = customer_data['company_name'].strip()
+                        existing = session.query(Customer).filter(
+                            Customer.company_name == company_name
+                        ).first()
+                        if existing:
+                            duplicates.append({
+                                'field': 'company_name',
+                                'value': company_name,
+                                'existing_id': existing.id,
+                                'similarity': 1.0
+                            })
+                    
+                    # Check by contact phone
+                    if customer_data.get('contact_phone') and not duplicates:
+                        phone = customer_data['contact_phone'].strip()
+                        existing = session.query(Customer).filter(
+                            Customer.contact_phone == phone
+                        ).first()
+                        if existing:
+                            duplicates.append({
+                                'field': 'contact_phone',
+                                'value': phone,
+                                'existing_id': existing.id,
+                                'similarity': 1.0
+                            })
+                    
+                    # Check by credit code
+                    if customer_data.get('credit_code') and not duplicates:
+                        credit_code = customer_data['credit_code'].strip()
+                        existing = session.query(Customer).filter(
+                            Customer.credit_code == credit_code
+                        ).first()
+                        if existing:
+                            duplicates.append({
+                                'field': 'credit_code',
+                                'value': credit_code,
+                                'existing_id': existing.id,
+                                'similarity': 1.0
+                            })
+            except Exception:
+                # If session fails, return empty list
+                pass
+        
+        return duplicates

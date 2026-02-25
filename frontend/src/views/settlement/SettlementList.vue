@@ -3,83 +3,86 @@
     <div class="header-actions">
       <h2 class="page-title">结算管理</h2>
       <div class="actions">
-        <el-button type="primary" @click="handleGenerate">
-          <el-icon><Plus /></el-icon>
+        <a-button type="primary" @click="handleGenerate">
+          <icon-plus />
           生成账单
-        </el-button>
+        </a-button>
       </div>
     </div>
 
     <!-- 过滤条件 -->
-    <el-card class="filter-card">
-      <el-form :inline="true" :model="filters">
-        <el-form-item label="客户 ID">
-          <el-input v-model="filters.customer_id" placeholder="请输入客户 ID" clearable />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="filters.status" placeholder="全部" clearable>
-            <el-option label="待结算" value="pending" />
-            <el-option label="已审核" value="approved" />
-            <el-option label="已付款" value="paid" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="操作">
-          <el-button type="primary" @click="handleSearch">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <a-card class="filter-card">
+      <a-form :inline="true">
+        <a-form-item label="客户 ID">
+          <a-input v-model="filters.customer_id" placeholder="请输入客户 ID" allow-clear />
+        </a-form-item>
+        <a-form-item label="状态">
+          <a-select v-model="filters.status" placeholder="全部" allow-clear>
+            <a-option value="pending">待结算</a-option>
+            <a-option value="approved">已审核</a-option>
+            <a-option value="paid">已付款</a-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="操作">
+          <a-button type="primary" @click="handleSearch">查询</a-button>
+          <a-button @click="handleReset">重置</a-button>
+        </a-form-item>
+      </a-form>
+    </a-card>
 
     <!-- 账单列表 -->
-    <el-table :data="settlements" v-loading="loading" style="width: 100%">
-      <el-table-column prop="record_id" label="账单 ID" width="200" />
-      <el-table-column prop="customer_id" label="客户 ID" width="100" />
-      <el-table-column prop="period_start" label="结算周期" width="200">
-        <template #default="{ row }">
-          {{ formatDate(row.period_start) }} - {{ formatDate(row.period_end) }}
+    <a-table :data="settlements" :loading="loading">
+      <a-table-column title="账单 ID" data-index="record_id" :width="200" />
+      <a-table-column title="客户 ID" data-index="customer_id" :width="100" />
+      <a-table-column title="结算周期" :width="200">
+        <template #cell="{ record }">
+          {{ formatDate(record.period_start) }} - {{ formatDate(record.period_end) }}
         </template>
-      </el-table-column>
-      <el-table-column prop="price_model" label="定价模式" width="100">
-        <template #default="{ row }">
-          <el-tag>{{ getPriceModelLabel(row.price_model) }}</el-tag>
+      </a-table-column>
+      <a-table-column title="定价模式" :width="100">
+        <template #cell="{ record }">
+          <a-tag>{{ getPriceModelLabel(record.price_model) }}</a-tag>
         </template>
-      </el-table-column>
-      <el-table-column prop="usage_quantity" label="用量" width="100" />
-      <el-table-column prop="total_amount" label="总金额" width="100">
-        <template #default="{ row }">
-          ¥{{ row.total_amount?.toFixed(2) }}
+      </a-table-column>
+      <a-table-column title="用量" data-index="usage_quantity" :width="100" />
+      <a-table-column title="总金额" :width="100">
+        <template #cell="{ record }">
+          ¥{{ record.total_amount?.toFixed(2) }}
         </template>
-      </el-table-column>
-      <el-table-column prop="status" label="状态" width="80">
-        <template #default="{ row }">
-          <el-tag :type="getStatusType(row.status)">
-            {{ getStatusLabel(row.status) }}
-          </el-tag>
+      </a-table-column>
+      <a-table-column title="状态" :width="80">
+        <template #cell="{ record }">
+          <a-tag :color="getStatusType(record.status)">
+            {{ getStatusLabel(record.status) }}
+          </a-tag>
         </template>
-      </el-table-column>
-      <el-table-column prop="created_at" label="生成时间" width="160">
-        <template #default="{ row }">
-          {{ formatDateTime(row.created_at) }}
+      </a-table-column>
+      <a-table-column title="生成时间" data-index="created_at" :width="160">
+        <template #cell="{ record }">
+          {{ formatDateTime(record.created_at) }}
         </template>
-      </el-table-column>
-      <el-table-column label="操作" width="150" fixed="right">
-        <template #default="{ row }">
-          <el-button link type="primary" size="small" @click="handleView(row)">查看</el-button>
-          <el-button link type="success" size="small" @click="handleExport(row)">导出</el-button>
+      </a-table-column>
+      <a-table-column title="操作" :width="150" fixed="right">
+        <template #cell="{ record }">
+          <a-space>
+            <a-button type="text" size="small" @click="handleView(record)">查看</a-button>
+            <a-button type="text" size="small" @click="handleExport(record)">导出</a-button>
+          </a-space>
         </template>
-      </el-table-column>
-    </el-table>
+      </a-table-column>
+    </a-table>
 
     <!-- 分页 -->
     <div class="pagination-container">
-      <el-pagination
-        v-model:current-page="pagination.page"
+      <a-pagination
+        v-model:current="pagination.page"
         v-model:page-size="pagination.pageSize"
         :total="pagination.total"
-        :page-sizes="[10, 20, 50, 100]"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handlePageChange"
+        :page-size-options="[10, 20, 50, 100]"
+        show-total
+        show-jumper
+        @change="handlePageChange"
+        @page-size-change="handleSizeChange"
       />
     </div>
 
@@ -101,11 +104,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { Message } from '@arco-design/web-vue'
 import { settlementAPI } from '@/api/settlement'
 import GenerateSettlement from './GenerateSettlement.vue'
 import SettlementDetail from './SettlementDetail.vue'
+import { IconPlus } from '@arco-design/web-vue/es/icon'
 
 const loading = ref(false)
 const settlements = ref<any[]>([])
@@ -138,10 +141,59 @@ const loadSettlements = async () => {
     pagination.total = data.total
     pagination.totalPages = data.total_pages
   } catch (error) {
-    ElMessage.error('加载账单列表失败')
+    Message.error('加载账单列表失败')
   } finally {
     loading.value = false
   }
+}
+
+// 搜索
+const handleSearch = () => {
+  pagination.page = 1
+  loadSettlements()
+}
+
+// 重置
+const handleReset = () => {
+  filters.customer_id = ''
+  filters.status = ''
+  handleSearch()
+}
+
+// 生成账单
+const handleGenerate = () => {
+  generateVisible.value = true
+}
+
+const handleGenerateSuccess = () => {
+  generateVisible.value = false
+  Message.success('账单生成成功')
+  loadSettlements()
+}
+
+// 查看详情
+const handleView = (row: any) => {
+  selectedSettlement.value = row
+  detailVisible.value = true
+}
+
+// 导出
+const handleExport = (row: any) => {
+  // TODO: Implement export functionality
+  Message.info('导出功能开发中')
+}
+
+// 分页处理
+const handlePageChange = (page: number) => {
+  pagination.page = page
+  loadSettlements()
+}
+
+const handleSizeChange = (size: number) => {
+  pagination.pageSize = size
+  pagination.page = 1
+  loadSettlements()
+}
 }
 
 const handleSearch = () => {

@@ -4,103 +4,105 @@
     <div class="header-actions">
       <h2 class="page-title">客户管理</h2>
       <div class="actions">
-        <el-input
+        <a-input
           v-model="searchQuery"
           placeholder="搜索公司名称或联系人"
-          clearable
+          allow-clear
           class="search-input"
           @clear="handleSearch"
-          @keyup.enter="handleSearch"
+          @press-enter="handleSearch"
         >
           <template #prefix>
-            <el-icon><Search /></el-icon>
+            <icon-search />
           </template>
-        </el-input>
-        <el-select
+        </a-input>
+        <a-select
           v-model="filterStatus"
           placeholder="客户状态"
-          clearable
+          allow-clear
           class="filter-select"
           @change="handleSearch"
         >
-          <el-option label="活跃" value="active" />
-          <el-option label="非活跃" value="inactive" />
-          <el-option label="潜在客户" value="potential" />
-        </el-select>
-        <el-select
+          <a-option value="active">活跃</a-option>
+          <a-option value="inactive">非活跃</a-option>
+          <a-option value="potential">潜在客户</a-option>
+        </a-select>
+        <a-select
           v-model="filterLevel"
           placeholder="客户等级"
-          clearable
+          allow-clear
           class="filter-select"
           @change="handleSearch"
         >
-          <el-option label="VIP" value="vip" />
-          <el-option label="标准" value="standard" />
-          <el-option label="经济" value="economy" />
-        </el-select>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
+          <a-option value="vip">VIP</a-option>
+          <a-option value="standard">标准</a-option>
+          <a-option value="economy">经济</a-option>
+        </a-select>
+        <a-button type="primary" @click="handleAdd">
+          <icon-plus />
           新增客户
-        </el-button>
+        </a-button>
       </div>
     </div>
 
     <!-- 客户列表表格 -->
-    <el-table
+    <a-table
       :data="customers"
-      v-loading="loading"
-      style="width: 100%"
+      :loading="loading"
       @sort-change="handleSortChange"
     >
-      <el-table-column prop="company_name" label="公司名称" min-width="200" sortable="custom" />
-      <el-table-column prop="contact_name" label="联系人" width="100" />
-      <el-table-column prop="contact_phone" label="联系方式" width="120" />
-      <el-table-column prop="province" label="省份" width="80" />
-      <el-table-column prop="city" label="城市" width="80" />
-      <el-table-column label="客户等级" width="80">
-        <template #default="{ row }">
-          <el-tag :type="getLevelType(row.level)">
-            {{ getLevelLabel(row.level) }}
-          </el-tag>
+      <a-table-column title="公司名称" data-index="company_name" :width="200" sortable />
+      <a-table-column title="联系人" data-index="contact_name" :width="100" />
+      <a-table-column title="联系方式" data-index="contact_phone" :width="120" />
+      <a-table-column title="省份" data-index="province" :width="80" />
+      <a-table-column title="城市" data-index="city" :width="80" />
+      <a-table-column title="客户等级" :width="80">
+        <template #cell="{ record }">
+          <a-tag :color="getLevelType(record.level)">
+            {{ getLevelLabel(record.level) }}
+          </a-tag>
         </template>
-      </el-table-column>
-      <el-table-column label="状态" width="80">
-        <template #default="{ row }">
-          <el-tag :type="getStatusType(row.status)">
-            {{ getStatusLabel(row.status) }}
-          </el-tag>
+      </a-table-column>
+      <a-table-column title="状态" :width="80">
+        <template #cell="{ record }">
+          <a-tag :color="getStatusType(record.status)">
+            {{ getStatusLabel(record.status) }}
+          </a-tag>
         </template>
-      </el-table-column>
-      <el-table-column prop="created_at" label="创建时间" width="160" sortable="custom">
-        <template #default="{ row }">
-          {{ formatDate(row.created_at) }}
+      </a-table-column>
+      <a-table-column title="创建时间" data-index="created_at" :width="160" sortable>
+        <template #cell="{ record }">
+          {{ formatDate(record.created_at) }}
         </template>
-      </el-table-column>
-      <el-table-column label="操作" width="200" fixed="right">
-        <template #default="{ row }">
-          <el-button link type="primary" size="small" @click="handleView(row)">
-            查看
-          </el-button>
-          <el-button link type="primary" size="small" @click="handleEdit(row)">
-            编辑
-          </el-button>
-          <el-button link type="danger" size="small" @click="handleDelete(row)">
-            删除
-          </el-button>
+      </a-table-column>
+      <a-table-column title="操作" :width="200" fixed="right">
+        <template #cell="{ record }">
+          <a-space>
+            <a-button type="text" size="small" @click="handleView(record)">
+              查看
+            </a-button>
+            <a-button type="text" size="small" @click="handleEdit(record)">
+              编辑
+            </a-button>
+            <a-button type="text" status="danger" size="small" @click="handleDelete(record)">
+              删除
+            </a-button>
+          </a-space>
         </template>
-      </el-table-column>
-    </el-table>
+      </a-table-column>
+    </a-table>
 
     <!-- 分页 -->
     <div class="pagination-container">
-      <el-pagination
-        v-model:current-page="pagination.page"
+      <a-pagination
+        v-model:current="pagination.page"
         v-model:page-size="pagination.pageSize"
         :total="pagination.total"
-        :page-sizes="[10, 20, 50, 100]"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handlePageChange"
+        :page-size-options="[10, 20, 50, 100]"
+        show-total
+        show-jumper
+        @change="handlePageChange"
+        @page-size-change="handleSizeChange"
       />
     </div>
 
@@ -124,11 +126,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { Search, Plus } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { Message, MessageBox } from '@arco-design/web-vue'
 import { customerAPI, type Customer } from '@/api/customer'
 import CustomerForm from './CustomerForm.vue'
 import CustomerDetail from './CustomerDetail.vue'
+import {
+  IconSearch,
+  IconPlus
+} from '@arco-design/web-vue/es/icon'
 
 // 状态
 const loading = ref(false)
@@ -168,7 +173,7 @@ const loadCustomers = async () => {
     pagination.total = data.total
     pagination.totalPages = data.total_pages
   } catch (error) {
-    ElMessage.error('加载客户列表失败')
+    Message.error('加载客户列表失败')
     console.error(error)
   } finally {
     loading.value = false
@@ -221,22 +226,22 @@ const handleEdit = (customer: Customer) => {
 // 删除客户
 const handleDelete = async (customer: Customer) => {
   try {
-    await ElMessageBox.confirm(
+    await MessageBox.confirm(
       `确定要删除客户 "${customer.company_name}" 吗？此操作不可恢复。`,
       '删除确认',
       {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+        okText: '确定',
+        cancelText: '取消',
         type: 'warning'
       }
     )
     
     await customerAPI.deleteCustomer(customer.customer_id)
-    ElMessage.success('删除成功')
+    Message.success('删除成功')
     loadCustomers()
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      Message.error('删除失败')
       console.error(error)
     }
   }
@@ -245,7 +250,7 @@ const handleDelete = async (customer: Customer) => {
 // 表单成功回调
 const handleFormSuccess = () => {
   formVisible.value = false
-  ElMessage.success('操作成功')
+  Message.success('操作成功')
   loadCustomers()
 }
 

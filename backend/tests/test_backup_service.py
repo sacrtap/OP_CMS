@@ -82,7 +82,7 @@ class TestCreateBackup:
             service.db_user = 'op_cms_user'
             service.db_password = 'password'
             
-            with pytest.raises(Exception, match="Database backup failed"):
+            with pytest.raises(Exception, match="mysqldump failed"):
                 service.create_backup(backup_type='full')
     
     def test_create_backup_invalid_type(self):
@@ -100,16 +100,20 @@ class TestCreateBackup:
             with patch.object(service, '_compress_file', return_value='/path/backup.sql.gz'):
                 with patch('subprocess.run'):
                     with patch('os.remove'):
-                        result = service.create_backup(backup_type='custom')
-                        assert result['type'] == 'custom'
+                        with patch('builtins.open', create=True):
+                            with patch('os.path.getsize', return_value=1024):
+                                result = service.create_backup(backup_type='custom')
+                                assert result['type'] == 'custom'
 
 
 class TestRestoreBackup:
     """Tests for restore_backup method"""
     
     @patch('backend.services.backup_service.os.path.exists')
+    @patch('backend.services.backup_service.os.remove')
     @patch('backend.services.backup_service.subprocess.run')
-    def test_restore_backup_success(self, mock_run, mock_exists):
+    @patch('backend.services.backup_service.open')
+    def test_restore_backup_success(self, mock_open, mock_run, mock_remove, mock_exists):
         """Test successful backup restoration"""
         mock_exists.return_value = True
         

@@ -3,11 +3,59 @@
     <div class="header-actions">
       <h2 class="page-title">定价配置</h2>
       <div class="actions">
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
+        <a-button type="primary" @click="handleAdd">
+          <icon-plus />
           新增定价
-        </el-button>
+        </a-button>
       </div>
+
+    <a-table :data="pricingConfigs" :loading="loading">
+      <a-table-column title="配置名称" data-index="name" :width="150" />
+      <a-table-column title="客户 ID" data-index="customer_id" :width="100" />
+      <a-table-column title="设备系列" :width="80">
+        <template #cell="{ record }">
+          <a-tag :color="getSeriesType(record.device_series)">{{ record.device_series }}</a-tag>
+        </template>
+      </a-table-column>
+      <a-table-column title="定价模式" :width="100">
+        <template #cell="{ record }">
+          <a-tag>{{ getPriceModelLabel(record.price_model) }}</a-tag>
+        </template>
+      </a-table-column>
+      <a-table-column title="单价" :width="100">
+        <template #cell="{ record }">
+          ¥{{ record.unit_price.toFixed(4) }}
+        </template>
+      </a-table-column>
+      <a-table-column title="状态" :width="80">
+        <template #cell="{ record }">
+          <a-tag :color="record.is_active ? 'green' : 'gray'">
+            {{ record.is_active ? '启用' : '禁用' }}
+          </a-tag>
+        </template>
+      </a-table-column>
+      <a-table-column title="操作" :width="200" fixed="right">
+        <template #cell="{ record }">
+          <a-space>
+            <a-button type="text" size="small" @click="handleEdit(record)">编辑</a-button>
+            <a-button type="text" status="danger" size="small" @click="handleDelete(record)">删除</a-button>
+          </a-space>
+        </template>
+      </a-table-column>
+    </a-table>
+
+    <div class="pagination-container">
+      <a-pagination
+        v-model:current="pagination.page"
+        v-model:page-size="pagination.pageSize"
+        :total="pagination.total"
+        :page-size-options="[10, 20, 50, 100]"
+        show-total
+        show-jumper
+        @change="handlePageChange"
+        @page-size-change="handleSizeChange"
+      />
+    </div>
     </div>
 
     <el-table :data="pricingConfigs" v-loading="loading" style="width: 100%">
@@ -66,10 +114,10 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { Message, MessageBox } from '@arco-design/web-vue'
 import { pricingAPI } from '@/api/pricing'
 import PricingForm from './PricingForm.vue'
+import { IconPlus } from '@arco-design/web-vue/es/icon'
 
 const loading = ref(false)
 const pricingConfigs = ref<any[]>([])
@@ -94,7 +142,7 @@ const loadPricingConfigs = async () => {
     pagination.total = data.total
     pagination.totalPages = data.total_pages
   } catch (error) {
-    ElMessage.error('加载定价配置失败')
+    Message.error('加载定价配置失败')
   } finally {
     loading.value = false
   }
@@ -112,24 +160,24 @@ const handleEdit = (row: any) => {
 
 const handleDelete = async (row: any) => {
   try {
-    await ElMessageBox.confirm('确定要删除此定价配置吗？', '删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    await MessageBox.confirm('确定要删除此定价配置吗？', '删除确认', {
+      okText: '确定',
+      cancelText: '取消',
       type: 'warning'
     })
     await pricingAPI.deletePricingConfig(row.id)
-    ElMessage.success('删除成功')
+    Message.success('删除成功')
     loadPricingConfigs()
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      Message.error('删除失败')
     }
   }
 }
 
 const handleFormSuccess = () => {
   formVisible.value = false
-  ElMessage.success('操作成功')
+  Message.success('操作成功')
   loadPricingConfigs()
 }
 

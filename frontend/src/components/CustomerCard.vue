@@ -2,37 +2,41 @@
   <div class="customer-card">
     <div class="card-header">
       <h3>{{ customer.company_name }}</h3>
-      <el-tag :type="getStatusType(customer.status)" size="small">
+      <a-tag :color="getStatusType(customer.status)" size="small">
         {{ getStatusLabel(customer.status) }}
-      </el-tag>
+      </a-tag>
     </div>
     
     <div class="card-body">
       <div class="info-row">
-        <el-icon><User /></el-icon>
+        <icon-user />
         <span>{{ customer.contact_name }}</span>
       </div>
       <div class="info-row">
-        <el-icon><Phone /></el-icon>
+        <icon-phone />
         <span>{{ customer.contact_phone }}</span>
       </div>
       <div class="info-row">
-        <el-icon><Location /></el-icon>
+        <icon-location />
         <span>{{ customer.province }} {{ customer.city }}</span>
       </div>
     </div>
     
     <div class="card-footer">
-      <el-button size="small" @click="handleView">查看</el-button>
-      <el-button size="small" type="primary" @click="handleEdit">编辑</el-button>
+      <a-button size="small" @click="handleView">查看</a-button>
+      <a-button size="small" type="primary" @click="handleEdit">编辑</a-button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { User, Phone, Location } from '@element-plus/icons-vue'
+import {
+  IconUser,
+  IconPhone,
+  IconLocation
+} from '@arco-design/web-vue/es/icon'
 
-defineProps<{
+const props = defineProps<{
   customer: {
     id: number
     company_name: string
@@ -97,7 +101,7 @@ const handleEdit = () => emit('edit', props.customer)
   font-size: 14px;
 }
 
-.info-row .el-icon {
+.info-row .arco-icon {
   margin-right: 8px;
   color: #999;
 }

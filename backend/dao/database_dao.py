@@ -16,7 +16,7 @@ Programming Language: Python 3.9+
 from typing import Optional, List, Dict, Any, TypeVar, Generic, Type
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update, delete, func, and_, or_
-from .database_models import Base, Customer, PriceConfig, SettlementRecord
+from ..models.database_models import Base, Customer, PriceConfig, SettlementRecord
 
 
 # Type variables for generic DAO

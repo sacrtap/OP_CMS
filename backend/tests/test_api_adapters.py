@@ -3,6 +3,7 @@ Tests for API Adapters
 """
 
 import pytest
+import time
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, MagicMock
 from typing import Dict, Any
@@ -220,10 +221,9 @@ class TestFailoverHandler:
         
         handler = FailoverHandler(endpoints)
         
-        # Open primary circuit
-        handler._circuit_breakers['primary'].record_failure()
-        handler._circuit_breakers['primary'].record_failure()
-        handler._circuit_breakers['primary'].record_failure()
+        # Open primary circuit (need 5 failures to reach threshold)
+        for _ in range(5):
+            handler._circuit_breakers['primary'].record_failure()
         
         # Should return secondary
         endpoint = handler.get_available_endpoint()

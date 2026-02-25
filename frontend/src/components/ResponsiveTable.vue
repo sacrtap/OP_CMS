@@ -1,14 +1,14 @@
 <template>
   <div class="responsive-table-container">
     <!-- Desktop: Table view -->
-    <el-table 
+    <a-table 
       v-if="!isMobile"
       :data="data"
-      style="width: 100%"
+      :pagination="false"
       v-bind="$attrs"
     >
       <slot></slot>
-    </el-table>
+    </a-table>
     
     <!-- Mobile: Card view -->
     <div v-else class="mobile-card-list">
@@ -65,7 +65,7 @@ onUnmounted(() => {
 
 /* Hide table on mobile */
 @media (max-width: 768px) {
-  :deep(.el-table) {
+  :deep(.arco-table) {
     display: none;
   }
 }

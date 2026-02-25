@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
-import { ElMessage } from 'element-plus'
+import { Message } from '@arco-design/web-vue'
 
 // API base URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
@@ -37,27 +37,27 @@ apiClient.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          ElMessage.error('未授权，请登录')
+          Message.error('未授权，请登录')
           // Redirect to login
           localStorage.removeItem('auth_token')
           window.location.href = '/login'
           break
         case 403:
-          ElMessage.error('无权访问')
+          Message.error('无权访问')
           break
         case 404:
-          ElMessage.error('请求的资源不存在')
+          Message.error('请求的资源不存在')
           break
         case 500:
-          ElMessage.error('服务器内部错误')
+          Message.error('服务器内部错误')
           break
         default:
-          ElMessage.error(error.response.data?.message || '请求失败')
+          Message.error(error.response.data?.message || '请求失败')
       }
     } else if (error.request) {
-      ElMessage.error('网络错误，请检查网络连接')
+      Message.error('网络错误，请检查网络连接')
     } else {
-      ElMessage.error(error.message || '未知错误')
+      Message.error(error.message || '未知错误')
     }
     return Promise.reject(error)
   }

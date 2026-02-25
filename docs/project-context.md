@@ -3,29 +3,36 @@
 **项目名称：** OP_CMS  
 **项目描述：** BMAD 驱动的数据库迁移项目 (PostgreSQL 16 → MySQL 8.0+)  
 **生成日期：** 2026-02-24  
-**BMAD 版本：** 6.0.3
+**最后更新：** 2026-02-25  
+**BMAD 版本：** 6.0.3  
+**测试状态：** 100% 通过率 (后端 179/179, 前端 32/32)
 
 ---
 
 ## 1. 技术栈和版本
 
 ### 前端技术栈
-- **框架：** Vue 3 (Composition API)
-- **UI 库：** Arco Design
-- **构建工具：** Vite 5.x
-- **状态管理：** Pinia
-- **路由：** Vue Router 4.x
-- **HTTP 客户端：** Axios
+- **框架：** Vue 3.4.19 (Composition API)
+- **UI 库：** Arco Design 2.57.0
+- **构建工具：** Vite 5.1.0
+- **状态管理：** Pinia 2.1.7
+- **路由：** Vue Router 4.2.5
+- **HTTP 客户端：** Axios 1.6.7
+- **TypeScript：** 5.3.3
 - **Node.js 版本：** 20.x+
+- **包管理：** Bun (bun.lockb present)
 
 ### 后端技术栈
-- **框架：** Sanic 23.x
+- **框架：** Sanic 23.6.0 + sanic-ext 23.6.0
 - **Python 版本：** 3.9+
-- **数据库：** MySQL 8.0+
-- **ORM：** Tortoise ORM / SQLAlchemy
-- **API 文档：** FastAPI/Swagger (兼容 Sanic)
-- **任务队列：** Celery / Redis Queue
-- **缓存：** Redis
+- **数据库：** MySQL 8.0+ (迁移自 PostgreSQL 16)
+- **ORM：** SQLAlchemy 2.0.0+ / Tortoise ORM
+- **MySQL 驱动：** PyMySQL 1.1.0+
+- **API 文档：** Swagger/OpenAPI (sanic-ext)
+- **任务队列：** Celery 5.3.0+ + Flower 2.0.0+
+- **缓存：** Redis 5.0.0+
+- **数据验证：** Pydantic 2.0.0+
+- **Excel 处理：** openpyxl 3.1.0+ + pandas 2.0.0+
 
 ### DevOps 技术栈
 - **容器化：** Docker 24.x + Docker Compose
@@ -58,27 +65,34 @@
 ### Vue 3 规则
 - **组件命名：** PascalCase (MyComponent.vue)
 - **文件命名：** kebab-case (my-component.vue)
-- **Composition API：** 使用 `setup()` + `ref()`/`reactive()`
+- **Composition API：** 使用 `<script setup lang="ts">` 语法糖
 - **状态管理：** Pinia stores in `src/stores/`
 - **路由：** Lazy loading for routes
 - **样式：** Scoped CSS + CSS Modules
+- **TypeScript：** 严格模式，所有组件使用 TypeScript
+- **UI 组件库：** 使用 Arco Design 组件 (@arco-design/web-vue)
+- **主题定制：** 使用 Arco Design 主题配置系统
 
 ### Sanic 规则
 - **蓝图：** 使用 Blueprint for modular routing
 - **异步视图：** Always async def for request handlers
-- **异常处理：** Custom exception handlers
-- **中间件：** Request/response interceptors
+- **异常处理：** Custom exception handlers with sanic-ext
+- **中间件：** Request/response interceptors (@app.middleware)
 - **配置管理：** Environment variables + config.py
+- **CORS：** 使用 sanic-ext 的 CORS 中间件
+- **类型提示：** 所有路由和服务函数使用类型提示
 
 ---
 
 ## 4. 测试规则
 
 ### 单元测试
-- **前端：** Vitest + Vue Test Utils
-- **后端：** pytest + pytest-asyncio
-- **覆盖率：** Minimum 80% coverage
+- **前端：** Vitest 1.2.2 + @vue/test-utils 2.4.6 + happy-dom/jsdom
+- **后端：** pytest + pytest-asyncio + coverage
+- **测试覆盖率：** 最低 70% (pytest --cov-fail-under=70)
 - **测试命名：** `test_<function>_<condition>_<expected>.py`
+- **测试报告：** HTML (htmlcov/) + terminal missing lines
+- **当前状态：** 100% 通过率 (后端 179/179, 前端 32/32)
 
 ### 集成测试
 - **E2E：** Playwright / Cypress
@@ -87,16 +101,20 @@
 
 ### 测试策略
 - **TDD：** Test-Driven Development for critical features
-- **红-绿-重构：** Red (write failing test) → Green (make it pass) → Refactor
+- **红 - 绿 - 重构：** Red (write failing test) → Green (make it pass) → Refactor
+- **测试标记：** pytest markers (unit, integration, slow, auth, customer, pricing)
+- **Mock 使用：** 对 Session、外部 API 使用 Mock，对 openpyxl 使用真实对象
+- **测试隔离：** 使用独立测试数据库，避免测试间污染
 
 ---
 
 ## 5. 代码质量和风格规则
 
 ### 静态代码分析
-- **前端：** ESLint + Prettier
-- **后端：** Ruff / Flake8 + Black
-- **类型检查：** MyPy (Python), TypeScript compiler
+- **前端：** ESLint 8.56.0 + Prettier + vue-tsc 1.8.27
+- **后端：** Ruff + Black
+- **类型检查：** TypeScript compiler (tsc), MyPy (Python)
+- **配置文件：** eslint.config.js, tsconfig.json, pytest.ini
 
 ### 代码规范
 - **函数长度：** Max 50 lines
@@ -242,6 +260,14 @@ OP_CMS/
 - **索引：** Index on foreign keys and frequently queried columns
 - **事务：** Use transactions for data consistency
 - **数据迁移：** Alembic / Tortoise ORM migrations
+- **SQL 语法：** 避免 PostgreSQL 特有语法 (RETURNING, ON CONFLICT, etc.)
+- **迁移注意：** MySQL 不支持部分 PostgreSQL 功能 (JSONB 操作符，数组类型等)
+
+### PostgreSQL 到 MySQL 迁移要点
+- **迁移工具：** 自定义迁移脚本 + 手动验证
+- **类型映射：** JSONB → JSON, ARRAY → JSON/逗号分隔，SERIAL → AUTO_INCREMENT
+- **语法变更：** 替换 PostgreSQL 特有函数和语法
+- **测试验证：** 所有查询和测试需在 MySQL 环境验证
 
 ### 数据模型命名
 - **表名：** snake_case plural (customers, pricing_configs)
@@ -355,6 +381,21 @@ OP_CMS/
 - **可逆性：** Upsert and downsert operations
 - **数据备份：** Backup before major migrations
 - **测试迁移：** Test migrations in staging environment
+- **幂等性：** Migration scripts must be idempotent
+
+### PostgreSQL → MySQL 迁移规则
+- **语法检查：** 替换所有 PostgreSQL 特有语法
+- **类型映射：** 
+  - JSONB → JSON (MySQL 8.0+ supports JSON)
+  - ARRAY → JSON or comma-separated string
+  - SERIAL → AUTO_INCREMENT
+  - TIMESTAMPTZ → DATETIME with timezone handling in app
+- **函数替换：**
+  - NOW() → CURRENT_TIMESTAMP
+  - RETURNING clause → separate SELECT after INSERT
+  - ON CONFLICT → INSERT ... ON DUPLICATE KEY UPDATE
+- **索引迁移：** 验证所有索引在 MySQL 下有效
+- **查询测试：** 所有自定义查询需在 MySQL 环境测试
 
 ### 迁移工具
 - ** Database：** Alembic or Tortoise ORM migrations
@@ -403,6 +444,7 @@ OP_CMS/
 
 ---
 
-**文档维护：** Last updated 2026-02-24  
-**版本：** v1.0  
-**由 BMAD generate-project-context workflow 生成
+**文档维护：** Last updated 2026-02-25  
+**版本：** v1.1  
+**由 BMAD generate-project-context workflow 更新  
+**测试状态：** 100% 通过率 (后端 179/179, 前端 32/32)

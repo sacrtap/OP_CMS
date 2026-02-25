@@ -161,7 +161,8 @@ class CustomerExcelService:
                 'preview': valid_records[:10]  # First 10 valid records
             }
             
-        except pd.ExcelError as e:
+        except (ValueError, KeyError) as e:
+            # Handle pandas Excel parsing errors
             raise ExcelImportError(f"Excel 文件解析失败：{str(e)}")
         except Exception as e:
             raise ExcelImportError(f"文件处理失败：{str(e)}")

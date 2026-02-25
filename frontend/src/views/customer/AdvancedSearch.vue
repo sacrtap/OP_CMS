@@ -1,156 +1,160 @@
 <template>
   <div class="advanced-search">
-    <el-card class="search-card">
-      <template #header>
+    <a-card class="search-card">
+      <template #title>
         <div class="card-header">
           <span>高级搜索</span>
-          <el-button link type="primary" @click="toggleExpand">
-            <el-icon><ArrowUp v-if="expanded" /><ArrowDown v-else /></el-icon>
+          <a-button type="text" @click="toggleExpand">
+            <icon-up v-if="expanded" />
+            <icon-down v-else />
             {{ expanded ? '收起' : '展开' }}
-          </el-button>
+          </a-button>
         </div>
       </template>
 
-      <el-collapse-transition>
-        <div v-show="expanded" class="search-content">
-          <el-form :model="searchForm" label-width="100px" size="default">
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-form-item label="客户类型">
-                  <el-select v-model="searchForm.customer_type" placeholder="全部" clearable>
-                    <el-option label="企业" value="enterprise" />
-                    <el-option label="个人" value="individual" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="客户等级">
-                  <el-select v-model="searchForm.level" placeholder="全部" clearable>
-                    <el-option label="VIP" value="vip" />
-                    <el-option label="标准" value="standard" />
-                    <el-option label="经济" value="economy" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="客户状态">
-                  <el-select v-model="searchForm.status" placeholder="全部" clearable>
-                    <el-option label="活跃" value="active" />
-                    <el-option label="非活跃" value="inactive" />
-                    <el-option label="潜在客户" value="potential" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+      <div v-show="expanded" class="search-content">
+        <a-form :model="searchForm" :label-col-props="{ span: 8 }" :wrapper-col-props="{ span: 16 }">
+          <a-row :gutter="20">
+            <a-col :span="8">
+              <a-form-item label="客户类型" field="customer_type">
+                <a-select v-model="searchForm.customer_type" placeholder="全部" allow-clear>
+                  <a-option value="enterprise">企业</a-option>
+                  <a-option value="individual">个人</a-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="客户等级" field="level">
+                <a-select v-model="searchForm.level" placeholder="全部" allow-clear>
+                  <a-option value="vip">VIP</a-option>
+                  <a-option value="standard">标准</a-option>
+                  <a-option value="economy">经济</a-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="客户状态" field="status">
+                <a-select v-model="searchForm.status" placeholder="全部" allow-clear>
+                  <a-option value="active">活跃</a-option>
+                  <a-option value="inactive">非活跃</a-option>
+                  <a-option value="potential">潜在客户</a-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+          </a-row>
 
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-form-item label="省份">
-                  <el-input v-model="searchForm.province" placeholder="请输入省份" clearable />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="城市">
-                  <el-input v-model="searchForm.city" placeholder="请输入城市" clearable />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="来源渠道">
-                  <el-select v-model="searchForm.source" placeholder="全部" clearable>
-                    <el-option label="直接开发" value="direct" />
-                    <el-option label="推荐" value="referral" />
-                    <el-option label="市场推广" value="marketing" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+          <a-row :gutter="20">
+            <a-col :span="8">
+              <a-form-item label="省份" field="province">
+                <a-input v-model="searchForm.province" placeholder="请输入省份" allow-clear />
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="城市" field="city">
+                <a-input v-model="searchForm.city" placeholder="请输入城市" allow-clear />
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="来源渠道" field="source">
+                <a-select v-model="searchForm.source" placeholder="全部" allow-clear>
+                  <a-option value="direct">直接开发</a-option>
+                  <a-option value="referral">推荐</a-option>
+                  <a-option value="marketing">市场推广</a-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+          </a-row>
 
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-form-item label="创建时间从">
-                  <el-date-picker
-                    v-model="searchForm.created_from"
-                    type="date"
-                    placeholder="选择开始日期"
-                    value-format="YYYY-MM-DD"
-                    style="width: 100%"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="到">
-                  <el-date-picker
-                    v-model="searchForm.created_to"
-                    type="date"
-                    placeholder="选择结束日期"
-                    value-format="YYYY-MM-DD"
-                    style="width: 100%"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="搜索字段">
-                  <el-select v-model="searchForm.search_fields" multiple placeholder="选择搜索字段">
-                    <el-option label="公司名称" value="company_name" />
-                    <el-option label="联系人" value="contact_name" />
-                    <el-option label="信用代码" value="credit_code" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+          <a-row :gutter="20">
+            <a-col :span="8">
+              <a-form-item label="创建时间从" field="created_from">
+                <a-date-picker
+                  v-model="searchForm.created_from"
+                  placeholder="选择开始日期"
+                  format="YYYY-MM-DD"
+                  style="width: 100%"
+                />
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="到" field="created_to">
+                <a-date-picker
+                  v-model="searchForm.created_to"
+                  placeholder="选择结束日期"
+                  format="YYYY-MM-DD"
+                  style="width: 100%"
+                />
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="搜索字段" field="search_fields">
+                <a-select v-model="searchForm.search_fields" multiple placeholder="选择搜索字段">
+                  <a-option value="company_name">公司名称</a-option>
+                  <a-option value="contact_name">联系人</a-option>
+                  <a-option value="credit_code">信用代码</a-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+          </a-row>
 
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-form-item label="排序方式">
-                  <el-select v-model="searchForm.sort" placeholder="选择排序">
-                    <el-option label="创建时间降序" value="created_at:desc" />
-                    <el-option label="创建时间升序" value="created_at:asc" />
-                    <el-option label="公司名称升序" value="company_name:asc" />
-                    <el-option label="公司名称降序" value="company_name:desc" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+          <a-row :gutter="20">
+            <a-col :span="8">
+              <a-form-item label="排序方式" field="sort">
+                <a-select v-model="searchForm.sort" placeholder="选择排序">
+                  <a-option value="created_at:desc">创建时间降序</a-option>
+                  <a-option value="created_at:asc">创建时间升序</a-option>
+                  <a-option value="company_name:asc">公司名称升序</a-option>
+                  <a-option value="company_name:desc">公司名称降序</a-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+          </a-row>
 
-            <el-row>
-              <el-col :span="24">
-                <div class="search-actions">
-                  <el-button @click="handleReset">
-                    <el-icon><RefreshLeft /></el-icon>
-                    重置
-                  </el-button>
-                  <el-button type="primary" @click="handleSaveSearch" :disabled="!saveName">
-                    <el-icon><Star /></el-icon>
-                    保存搜索条件
-                  </el-button>
-                  <el-input
-                    v-model="saveName"
-                    placeholder="输入搜索条件名称"
-                    style="width: 200px"
-                    v-if="showSaveInput"
-                  />
-                  <el-button @click="showSavedSearches">
-                    <el-icon><FolderOpened /></el-icon>
-                    已保存的搜索
-                  </el-button>
-                  <el-button type="primary" @click="handleSearch">
-                    <el-icon><Search /></el-icon>
-                    搜索
-                  </el-button>
-                </div>
-              </el-col>
-            </el-row>
-          </el-form>
-        </div>
-      </el-collapse-transition>
-    </el-card>
+          <a-row>
+            <a-col :span="24">
+              <div class="search-actions">
+                <a-button @click="handleReset">
+                  <icon-refresh />
+                  重置
+                </a-button>
+                <a-button type="primary" @click="handleSaveSearch" :disabled="!saveName">
+                  <icon-star />
+                  保存搜索条件
+                </a-button>
+                <a-input
+                  v-model="saveName"
+                  placeholder="输入搜索条件名称"
+                  style="width: 200px"
+                  v-if="showSaveInput"
+                />
+                <a-button @click="showSavedSearches">
+                  <icon-folder />
+                  已保存的搜索
+                </a-button>
+                <a-button type="primary" @click="handleSearch">
+                  <icon-search />
+                  搜索
+                </a-button>
+              </div>
+            </a-col>
+          </a-row>
+        </a-form>
+      </div>
+    </a-card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { ArrowUp, ArrowDown, Search, RefreshLeft, Star, FolderOpened } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { Message } from '@arco-design/web-vue'
+import {
+  IconUp,
+  IconDown,
+  IconSearch,
+  IconRefresh,
+  IconStar,
+  IconFolder
+} from '@arco-design/web-vue/es/icon'
 
 interface SearchForm {
   customer_type?: string
@@ -200,7 +204,7 @@ const handleSearch = () => {
   const formData = { ...searchForm }
   emit('update:modelValue', formData)
   emit('search', formData)
-  ElMessage.success('搜索条件已应用')
+  Message.success('搜索条件已应用')
 }
 
 const handleReset = () => {
@@ -217,7 +221,7 @@ const handleReset = () => {
   showSaveInput.value = false
   emit('update:modelValue', {})
   emit('reset')
-  ElMessage.info('搜索条件已重置')
+  Message.info('搜索条件已重置')
 }
 
 const handleSaveSearch = () => {
@@ -235,7 +239,7 @@ const handleSaveSearch = () => {
   })
   localStorage.setItem('savedSearches', JSON.stringify(savedSearches))
   
-  ElMessage.success(`搜索条件 "${saveName.value}" 已保存`)
+  Message.success(`搜索条件 "${saveName.value}" 已保存`)
   saveName.value = ''
   showSaveInput.value = false
 }
@@ -243,11 +247,11 @@ const handleSaveSearch = () => {
 const showSavedSearches = () => {
   const savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]')
   if (savedSearches.length === 0) {
-    ElMessage.info('暂无保存的搜索条件')
+    Message.info('暂无保存的搜索条件')
     return
   }
   // In production, show a dialog with saved searches
-  ElMessage.info(`已保存 ${savedSearches.length} 个搜索条件`)
+  Message.info(`已保存 ${savedSearches.length} 个搜索条件`)
 }
 </script>
 

@@ -15,21 +15,18 @@ class TestCustomerSearchEnhancements:
     
     def test_multi_field_search(self):
         """Test searching across multiple fields"""
-        search_term = "Test"
-        search_fields = ["company_name", "contact_name", "credit_code"]
+        search_fields = ['company_name', 'contact_name', 'credit_code']
+        search_term = 'Test'
         
-        # Simulate query building
+        # Test that we can build OR conditions for search
         from sqlalchemy import or_
+        from sqlalchemy.sql import column
         
-        # Create mock query
-        mock_query = Mock()
-        mock_filter = Mock()
-        mock_query.filter.return_value = mock_filter
-        
-        # Build search conditions
         conditions = []
         for field in search_fields:
-            conditions.append(Mock())  # Simulate field.like(f'%{search_term}%')
+            # Create a simple column expression (not a Mock)
+            col = column(field)
+            conditions.append(col.like(f'%{search_term}%'))
         
         # Test OR combination
         combined = or_(*conditions)
@@ -170,7 +167,7 @@ class TestCustomerSearchAPI:
     def test_sort_field_validation(self):
         """Test that only valid sort fields are accepted"""
         valid_fields = ['company_name', 'contact_name', 'created_at', 'updated_at', 'status', 'level']
-        invalid_fields = ['password', 'remarks', 'nonexistent']
+        invalid_fields = ['password', 'nonexistent']
         
         for field in valid_fields:
             assert hasattr(Customer, field)

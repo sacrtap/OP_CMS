@@ -2,19 +2,19 @@
   <!-- Mobile Bottom Navigation -->
   <nav v-if="isMobile" class="bottom-nav">
     <router-link to="/customers" class="nav-item" active-class="active">
-      <el-icon><User /></el-icon>
+      <icon-user />
       <span>客户</span>
     </router-link>
     <router-link to="/settlements" class="nav-item" active-class="active">
-      <el-icon><Document /></el-icon>
+      <icon-file />
       <span>结算</span>
     </router-link>
     <router-link to="/reports" class="nav-item" active-class="active">
-      <el-icon><DataAnalysis /></el-icon>
+      <icon-bar />
       <span>报表</span>
     </router-link>
     <router-link to="/dashboard" class="nav-item" active-class="active">
-      <el-icon><Monitor /></el-icon>
+      <icon-desktop />
       <span>驾驶舱</span>
     </router-link>
   </nav>
@@ -22,7 +22,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { User, Document, DataAnalysis, Monitor } from '@element-plus/icons-vue'
+import {
+  IconUser,
+  IconFile,
+  IconBar,
+  IconDesktop
+} from '@arco-design/web-vue/es/icon'
 
 const isMobile = ref(false)
 
@@ -65,10 +70,10 @@ onUnmounted(() => {
 }
 
 .nav-item.active {
-  color: #409EFF;
+  color: #165DFF;
 }
 
-.nav-item .el-icon {
+.nav-item .arco-icon {
   font-size: 24px;
   margin-bottom: 4px;
 }

@@ -304,13 +304,13 @@ class TestCalculateTieredProgressiveSettlement:
 class TestCreateSettlementRecord:
     """Tests for creating settlement records in database"""
     
-    @patch('backend.services.settlement_service.SettlementRecord')
     @patch('backend.services.settlement_service.uuid.uuid4')
-    def test_create_settlement_record_optional_fields(self, mock_uuid):
+    @patch('backend.services.settlement_service.SettlementRecord')
+    def test_create_settlement_record_optional_fields(self, mock_record_class, mock_uuid):
         """Test settlement record with optional fields"""
         service = SettlementService()
         
-        mock_uuid_module.uuid4.return_value = 'test-uuid-456'
+        mock_uuid.return_value = 'test-uuid-456'
         mock_session = Mock()
         
         calculation_result = {
@@ -458,7 +458,7 @@ class TestSettlementServiceIntegration:
         """Test complete settlement calculation and record creation"""
         service = SettlementService()
         
-        mock_uuid.uuid4.return_value = 'test-uuid'
+        mock_uuid.return_value = 'test-uuid'
         mock_session_instance = Mock()
         
         # Step 1: Calculate settlement
